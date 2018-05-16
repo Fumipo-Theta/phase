@@ -186,7 +186,7 @@
       return this;
     }
 
-    normalizeComposition(exceptH2O = false) {
+    normalizeComposition(exceptH2O = True) {
       const elements = Object.keys(this.major);
       const w = elements.map(e => {
         return (e === "H2O")
