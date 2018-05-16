@@ -167,6 +167,19 @@
       })
       return this;
     }
+
+    setMolar(_molar) {
+      Object.entries(_molar).map(kv => {
+        let k = kv[0];
+        let v = kv[1];
+        if (this.atom.hasOwnProperty(k)) {
+          this.atom[k] = v * 1.;
+        } else {
+          this.atom[k] = 0;
+        }
+      })
+      return this;
+    }
   }
 
 
@@ -246,39 +259,6 @@
 
   Phase.prototype = {
 
-
-    initializeProfile() {
-      for (let path of ["ascend", "descend"]) {
-        for (let e in this.major) {
-          this.profile[path][e] = [];
-        }
-        for (let e in this.trace) {
-          this.profile[path][e] = [];
-        }
-        this.profile[path].F = [];
-        this.profile[path].T = [];
-        this.profile[path].N = [];
-        this.profile[path].P = [];
-        this.profile[path].x = [];
-      }
-      return this;
-    },
-
-    setComposition(_compo) {
-
-      for (let prop in _compo) {
-        //console.log(prop)
-        if (this.major.hasOwnProperty(prop)) {
-          this.major[prop] = _compo[prop] * 1.;
-          this.major0[prop] = _compo[prop] * 1.;
-        } else if (this.trace.hasOwnProperty(prop)) {
-          this.trace[prop] = _compo[prop] * 1.;
-        }
-
-      }
-
-      return this;
-    },
 
     setMolar(_molar) {
       for (let prop in _molar) {
