@@ -467,16 +467,7 @@
    * liquidT = thermometer.Sugawara2000.bind(liquid);
    * T = liquidT(P);
    */
-  Phase.thermometer.Sugawara2000 = function (_pressure = 1) {
-    if (!Liquid.isLiquid(this)) return false;
 
-    let atom = this.atom;
-    let atomSum = this.getAtomSum(false, false) * 0.01;
-    let T = 1446 + (-1.44 * atom.SiO2 - 0.5 * atom.FeO + 12.32 * atom.MgO - 3.899 * atom.CaO) / atomSum;
-
-    return T + 0.0043 * _pressure;
-
-  }
 
   /** Mederd & Grove (2008) Liquidus drop by water (wt%)
    * 
