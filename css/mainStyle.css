@@ -1,0 +1,511 @@
+/* 共通コンポーネント */
+	
+
+	/* スクロールバー */
+
+	
+::-webkit-scrollbar {
+    width: 5px;
+}
+ 
+::-webkit-scrollbar-track {
+    background-color: rgba(0,0,0,0)
+}
+ 
+::-webkit-scrollbar-thumb {
+		background-color: #2196f3;
+}
+
+/* all */
+
+*{
+	box-sizing:border-box;
+}
+
+/* body */
+
+body{
+	margin: 0;
+	background-color: #ddd;
+	font-size:1.5rem;
+}
+
+hr{
+	border-top: 1.5px solid #ddd;
+}
+
+a,
+a:visited{
+	text-decoration: none;
+}
+
+a.button{
+	display: flex;
+	align-items: center;
+	justify-content:space-around;
+}
+
+svg{
+	margin: 0 10px;
+}
+
+form{
+	margin:0;
+}
+
+ul{
+	list-style: none;
+	padding: 0;
+	margin: 0 auto;
+}
+
+li{
+	display: flex;
+	margin: 10px 0;
+	border-bottom: 1px solid #ddd;
+}
+
+
+/* page navigation */
+#page_nav{
+	width: 100px;
+	min-height: 100px;
+	position: fixed;
+	
+	margin: 0px;
+	padding: 10px;
+	
+	bottom: 0;
+	right: 0;
+	
+	display: flex;
+	justify-content: center;
+}
+
+
+.flex_column_wrap{
+	display: flex;
+	flex-direction: column-reverse;
+}
+
+
+/* overlay */
+#overlay{
+	position: fixed;
+	width: 100%;
+	height: 100%;
+	background-color: rgba(255,255,255,0.75);
+}
+
+	#overlay::after{
+		content: "Wait a moment...";
+		position: relative;
+		top: 50%;
+		left: 50%;
+		color: #2196f3;
+		font-size: 3rem;
+	}
+
+/* card */
+
+.card{
+	width: 90vw;
+	min-height: 10px;
+	min-width: 1000px;
+	margin: 20px auto 20px auto;
+	overflow: hidden;
+	border-radius: 5px;
+}
+
+.inner_card{
+	display: flex;
+	width: 100%;
+	min-height: 10px;
+	margin: 1px auto 1px auto;
+	padding: 20px 40px;
+	background-color: #fff;
+	box-shadow: 0 1px 1px 1px rgba(0,0,0,0.3);
+}
+
+.title{
+	color: #888;
+	font-size: 1.2rem;
+	font-family: "Arial";
+	border-left: 10px solid #447;
+}
+
+/* top form */
+#form{
+	font-family: "Arial";
+	color:#888;
+}
+
+#file_form{
+	display: flex;
+}
+
+	#form_left{
+		padding: 0px;
+		flex: 6;
+		min-width: 800px;
+	}
+
+		#file_select li{
+			display: flex;
+			margin: 10px 0;
+			border: none;
+		}
+		
+			.instruction{
+				flex: 1;
+				min-width: 100px;
+			}
+			
+			.input_element{
+				flex: 1;
+				max-width: 200px;
+				padding: 10px;
+			}
+			
+			.filename{
+				flex: 1;
+				min-width: 100px;
+				padding: 10px ;
+			}
+
+	#form_right{
+		flex: 4;
+	}
+
+	#run_right{
+		flex:1;
+		padding: 0px;
+	}
+
+	#run_left{
+		flex:1;
+		padding: 0px;
+	}
+
+/*
+label.file,
+label.button{
+	color: #fff;
+	background-color: #2196f3;
+	cursor: pointer;
+	font-size: 1.2rem;
+	margin: 10px 10px;
+	padding:5px;
+	border: none;
+	box-shadow: 0 1px 1px 1px rgba(0,0,0,0.3);
+	border-radius: 5px;
+}
+
+label.file:hover,
+label.file:focus,
+label.button:hover,
+label.button:focus{
+	background-color: #FF4081;
+	box-shadow: 0 2px 2px 2px rgba(0,0,0,0.5);
+}
+*/
+label.file,
+label.button{
+	cursor: pointer;
+	font-size: 1.2rem;
+	margin: 10px 10px;
+	padding:10px 30px;
+	background-color: transparent;
+	border: 0.5px solid #2196f3;
+	color: #2196f3;
+	border-radius: 5px;
+}
+
+label.file:hover,
+label.file:focus,
+label.button:hover,
+label.button:focus{
+	transition: all .3s;
+	background-color: #2196f3;
+	color: #fff;
+}
+
+label.file:active,
+label.file:active{
+	border: 0.5px solid #FF4081;
+	background-color: #FF4081;
+}
+
+
+input{
+	font-size: 1.5rem;
+}
+
+input[type="text"],
+input[type="number"]{
+	margin-left: 20px;
+	margin-right: 20px;
+	border: none;
+	border-bottom: 1px solid #2196f3;
+}
+
+.button{
+	background-color: transparent;
+	border: 0.5px solid #2196f3;
+	color: #2196f3;
+	border-radius: 5px;
+}
+
+.button.round,
+.button.round{
+	width: 100px;
+	height: 100px;
+	border-radius: 50%;
+}
+
+.button.round.nav{
+	width: 75px;
+	height: 75px;
+	border-radius: 50%;
+	
+	border: 0.5px solid #888;
+	color: #888;
+}
+
+.button:hover,
+.button:focus,
+.button.round.nav:hover,
+.button.round.nav:focus{
+	transition: all .3s;
+	background-color: #2196f3;
+	color: #fff;
+	border: 0.5px solid #2196f3;
+	box-shadow: 0 2px 5px 2px rgba(0,128,255,0.5);
+}
+
+.button:active,
+.button.round.nav:active{
+	background-color: #FF4081;
+	border: 0.5px solid #FF4081;
+	box-shadow: 0 2px 5px 2px rgba(255,30,40,0.5);
+}
+
+.fileName{
+	color: #2196f3;
+	font-size: 1.2rem;
+}
+
+/* Profile card */
+#line_profile,
+#analyzed_profile{
+	flex-wrap: wrap;
+	align-content: space-between;
+}
+
+/* summary pain */
+#accepted_param{
+	flex: 1;
+}
+
+		#accepted_param .summary_key{
+			flex: 1.2;
+			font-size: 1rem;
+			color: #888;
+		}
+
+		#accepted_param .summary_value{
+			flex: 3;
+			font-size: 1.5rem;
+			color: #000;
+		}
+
+#download_menu{
+	flex: 2;
+}
+	
+	#download_menu li{
+		border: none;
+	}
+
+/* Parameter summary card */
+.paramInfo{
+	flex-wrap: wrap;
+	align-content: space-between;
+	width: 100%;
+}
+
+	.paramInfo svg{
+		flex: 3;
+	}
+
+	.paramInfo svg.histogram{
+			flex:2;
+	}
+
+	.paramInfo .statistics{
+		flex: 1.5;
+		padding: 10px;
+	}
+
+		.statistics ul{
+
+		}
+
+		.statistics li{
+
+		}
+		
+		.statistics .summary_key{
+			flex: 1.2;
+			font-size: 1rem;
+			color: #888;
+		}
+
+		.statistics .summary_value{
+			flex: 3;
+			font-size: 1.5rem;
+			color: #000;
+		}
+
+	.statistics_title{
+		vertical-align: middle;
+		color: #447;
+		border-right: 1px solid #447;
+		width: 1.5rem;
+		text-align: left;
+		position: relative;
+	}
+
+	.statistics_title span{
+		display: inline-block;
+		transform: rotate(-90deg);
+		transform-origin: left top;
+		position: absolute;
+		bottom:0%;
+		line-height: 0;
+	}
+
+	
+
+		
+
+/* graph */
+
+.axis text{
+	font: 8px "Arial";
+	fill: #888;
+}
+
+text.xlabel,
+text.ylabel{
+	font: 20px "Arial";
+	fill: #888
+}
+
+.axis path,
+.axis line{
+	fill:none;
+	stroke: #bbb;
+	stroke-width: 1;
+	shape-rendering: crispEdges;
+}
+
+.clearfix::after{
+	content: '';
+	display: block;
+	clear: both;
+	background: rgba(0,0,0,0);
+}
+
+/* simbol */
+
+circle.d{
+	fill:#fff;
+	stroke: #2196f3;
+	stroke-width:2;
+	r:3
+}
+
+path.d{
+	stroke:#2196f3;
+	stroke-width: 1;
+}
+
+path.data{
+	stroke:#000;
+	stroke-width: 2;
+}
+
+#line_profile path.d{
+	stroke-width:2;
+}
+
+#analyzed_profile{
+	background-color: #404050;
+}
+
+#analyzed_profile h3{
+	color: #404050;
+}
+
+#analyzed_profile circle.d{
+	fill: #fff;
+	stroke: #2196f3;
+	stroke-width: 3;
+	r:4;
+}
+
+#analyzed_profile path.d{
+	stroke-width: 3;
+}
+
+#analyzed_profile circle.data{
+	fill: #fff;
+	stroke: #fff;
+	stroke-width: 1;
+}
+
+#analyzed_profile path.data{
+	stroke: #fff;
+	stroke-width: 3;
+}
+
+/*
+
+
+
+circle.Fe_Mg{
+	fill:#fff;
+	stroke:#f00;
+	stroke-width: 1;
+}
+
+path.Fe_Mg{
+	stroke:#f00;
+}
+
+circle.Cr2O3{
+	fill:#fff;
+	stroke:#0f0;
+	stroke-width: 1;
+}
+
+path.Cr2O3{
+	stroke:#0f0;
+}
+
+circle.NiO{
+	fill:#fff;
+	stroke:#00f;
+	stroke-width: 1;
+}
+
+path.NiO{
+	stroke:#00f;
+}
+*/
+
+rect.data{
+	fill: #2196f3;
+	stroke: #ffffff;
+}

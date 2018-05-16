@@ -1,0 +1,349 @@
+<html>
+<head>
+	<link rel="stylesheet" href="./css/mainStyle.css" charset="utf-8">
+	<meta http-equiv="Content-Type" charset="UTF-8">
+	<meta name="viewport" content="width=device-width,initial-scale=1">
+	<title>Multiple crystallization simulator</title>
+</head>
+<body>
+
+	<div id="form_form" class="card">
+		<div class="inner_card title">
+			Console
+		</div>
+		<div class="inner_card">
+			<ul id="file_select">
+				<li>
+					<span class="instruction">Load previous result(.json)</span>
+					<span class="input_element"><label for="resultFile" class="file">
+						Select File
+						<input type="file" accept=".json" id="resultFile" style="display:none">
+					</label></span>
+					<span id="resultFile_name" class="fileName">not selected</span>
+				</li>
+			</ul>
+		</div>
+
+	
+		<div class="inner_card" id="parameter_pain">
+			<div>
+				Element list
+				
+			</div>
+			
+			<div>
+				<input type="text" id="element_list" value="Fe_Mg Cr2O3 NiO">
+			</div>
+		</div>
+	</div>
+	
+	<div class="card">
+		<div class="inner_card title">
+			Line profile
+		</div>
+		
+		<div id="line_profile" class="inner_card">
+		</div>
+	</div>
+	
+	<div class="card">
+		<div class="inner_card title">
+			Table of profile
+		</div>
+		
+		<div id="profile_table" class="inner_card">
+		</div>
+	</div>
+		
+</body>
+	
+	<script src="../jslib/jquery-2.2.0.min.js" charset="utf-8"></script>
+	<script defer src="../jslib/jquery-ui.min.js" charset="utf-8"></script>
+	<script defer src="../jslib/jquery.ui.touch-punch.min.js" charset="utf-8"></script>
+	<script src="../jslib/d3.min.js" charset="utf-8"></script>
+	<script src="../jslib/mt.js" charset="utf-8"></script>
+	<script src="./js/multiCrystallization_v1.js" charset="utf-8"></script>
+	<script src="../multiDiffusion/js/multiDiffusion.js" charset="utf-8"></script>
+<script>
+/* _/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/ */
+/* gloval objects */
+	let g=new Object();
+	g.operand=new Object();
+	g.operand.elementList=setElementList(document.getElementById("element_list").value);
+
+/* operand parameter pain */
+	
+	document.getElementById("parameter_pain").onchange=function(){
+		g.operand.elementList=setElementList(document.getElementById("element_list").value);
+		console.log(g.operand);
+	};
+
+/* Load previous result */
+	document.getElementById("resultFile").onchange=function(evt){
+		showCard(["#overlay"]);
+		hideCard(["#download","#profile_wrapper","#summary_pain"]);
+	
+		d3.select("#param_wrapper").selectAll(".card").remove();
+
+		const file=evt.target.files;
+		const reader=new FileReader();
+		reader.readAsText(file[0]);
+		reader.onload=function(ev){
+			var resultObj=JSON.parse(reader.result);
+			if (resultObj.sample){
+				showSampleGraphs(resultObj.sample);
+			}else{
+				showSampleGraphs(resultObj);
+			};
+			
+			if (resultObj.operand){
+				g.operand=copyObject(resultObj.operand);
+			}
+			
+			if (resultObj.operand.analyzedCsvObj){
+				setText("#analyzedProfileFile_name",g.operand.analyzedUrl);
+			}else{
+				setText("#analyzedProfileFile_name","");
+			}
+			
+			if (resultObj.operand.errorCsvObj){
+				setText("#errorFile_name",g.operand.errorUrl);
+			}else{
+				setText("#errorFile_name","");
+			}
+			
+			// Show analyzed profile
+			showAnalyzedProfile(g.operand);
+			
+			if (resultObj.accept){
+				var num=new Number(resultObj.accept.rate)
+				
+				setText("#accepted_rate",num.toPrecision(3));
+				setText("#sampling_times",resultObj.accept.iterrate);
+				setText("#accepted_times",resultObj.accept.accepted);
+			}else{
+				setText("#accepted_rate","");
+				setText("#sampling_times","");
+				setText("#accepted_times","");
+				
+			}
+			
+			//showCard(["#summary_pain"]);
+			hideCard(["#overlay"]);
+			
+			console.log(g.operand);
+		};
+		setText("#resultFile_name",file[0].name);
+		
+	};
+
+
+/* Operation */
+	/* operand */
+var operand={
+	initialMelt:{
+		compo:{
+			MgO:8.5,
+			FeO:6.4,
+			SiO2:57.2,
+			TiO2:1,
+			Al2O3:12.5,
+			CaO:8.6,
+			Na2O:4.6,
+			K2O:2.4,
+			Cr2O3:0.076,
+			NiO:0.025,
+			total:100,
+			xMgO:0.4,
+		},
+		H2O:2,
+	},
+	
+	
+	solid:{
+		olivine:{
+			name:"olivine",
+			D:{
+				Fe_Mg:0.303,
+				Cr2O3:4,
+				NiO:20,
+			},
+			init:0.9,
+			react:0.9,
+		},
+		orthopyroxene:{
+			name:"orthopyroxene",
+			D:{
+				Fe_Mg:0.284,
+				Cr2O3:7,
+				NiO:5,
+			},
+			init:0.1,
+			react:0.1,
+		},
+		spinel:{
+			name:"spinel",
+			D:{
+				Fe_Mg:1,
+				Cr2O3:130,
+				NiO:6
+			},
+			init:0.05,
+			react:0.05,
+		},
+	},
+	
+	
+	elements:["Fe_Mg","Cr2O3","NiO"],
+
+	sectionInfo:[
+		{
+			phase:"orthopyroxene",
+			element:"MgN",
+				ini:83,
+				fin:78,
+				coolTime:3e8,
+				sectionRadius:14e-6,
+				pressure:9000,
+		},
+		{
+			phase:"orthopyroxene",
+			element:"MgN",
+				ini:91.5,
+				fin:86,
+				coolTime:3e8,
+				sectionRadius:32e-6,
+				pressure:9000,
+		}, 
+		{
+			phase:"orthopyroxene",
+			element:"MgN",
+				ini:86,
+				fin:84,
+				coolTime:3e8,
+				sectionRadius:56e-6,
+				pressure:9000,
+		},
+		{
+			phase:"orthopyroxene",
+			element:"MgN",
+				ini:87,
+				fin:84,
+				coolTime:3e8,
+				sectionRadius:78e-6,
+				pressure:9000,
+		},
+		{
+			phase:"orthopyroxene",
+			element:"MgN",
+				ini:86,
+				fin:85,
+				coolTime:3e8,
+				sectionRadius:94e-6,
+				pressure:9000,
+		},
+		{
+			phase:"orthopyroxene",
+			element:"MgN",
+				ini:87,
+				fin:78,
+				coolTime:3e8,
+				sectionRadius:120e-6,
+				pressure:9000,
+		},
+	],
+};
+
+
+
+	/* Instance */
+var crystal=new Array();
+var profile=new Array();
+
+(function(){
+for (var i=0; i<6; i++){
+	crystal[i]=new Crystal(operand.initialMelt,operand.solid,operand.elements);
+	console.log(i,crystal[i].getEquiMgnumber("orthopyroxene"))
+	
+	var targetPhase=operand.sectionInfo[i].phase;
+	var initialMgN=operand.sectionInfo[i].ini;	
+	var finalMgN=operand.sectionInfo[i].fin;
+	var time=operand.sectionInfo[i].coolTime;
+	var p=operand.sectionInfo[i].pressure;
+	var radiusMax=operand.sectionInfo[i].sectionRadius;
+	
+	// 出発メルトから結晶化初期のメルト組成を求める
+	if(initialMgN > crystal[i].getEquiMgnumber(targetPhase)){
+		crystal[i].remelting(initialMgN,targetPhase,false);
+	}else{
+		crystal[i].fractionate(initialMgN,targetPhase,false);
+	};
+	
+	// 結晶化したときのプロファイルを求める
+	if(finalMgN > crystal[i].getEquiMgnumber(targetPhase)){
+		crystal[i].remelting(finalMgN,targetPhase,true);
+	}else{
+		crystal[i].fractionate(finalMgN,targetPhase,true);
+	};
+	
+	profile[i]=crystal[i].getSection(targetPhase,operand.elements,time,p,"descend");
+	
+	
+	
+	var _l=profile[i].Fe_Mg.f.length;
+	/* 質量と半径の変換の係数を求める */
+	if (i == 0){
+		var previousR=0;
+	};
+	
+	
+	var _A=(Math.pow(radiusMax,3)-Math.pow(previousR,3))/(profile[i].Fe_Mg.f[_l-1]);
+	
+	/* 半径を算出 */
+	for (var k=0; k<operand.elements.length; k++){
+		var elem=operand.elements[k];
+		for (var j=0; j<_l; j++){
+			profile[i][elem].x[j]=Math.pow(_A*profile[i].Fe_Mg.f[j]+Math.pow(previousR,3),0.333333);
+			
+			/* Integrate sections */
+		
+			if (i != 0){
+				profile[0][elem].x.push(profile[i][elem].x[j]);
+				profile[0][elem].c.push(profile[i][elem].c[j]);
+			};
+		};
+	};
+	
+	
+
+	if (_l > 0) previousR=profile[i].Fe_Mg.x[_l-1];
+};
+})();
+
+
+console.log(profile)
+
+
+
+/* プロット プロファイル */
+d3.select("#line_profile").selectAll("div")
+	.data(operand.elements)
+	.enter().append("div")
+	.attr("id",function(d){console.log(d);return d})
+	.attr("style","float:left");
+
+
+var graph=new Array();
+for (var i in operand.elements){
+	var elem=operand.elements[i]
+	graph[elem]=new Graph("#"+elem,500,300,profile[0][elem]);
+	graph[elem].replot();
+};
+
+
+
+	
+</script>
+	
+</html>
+
