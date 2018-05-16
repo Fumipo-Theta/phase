@@ -323,6 +323,16 @@
       return this;
     }
 
+    getCationSum(exceptH2O = true) {
+      return Object.entries(GeoChem.getCationNum())
+        .map(kv => {
+          let k = kv[0], v = kv[1];
+          return (exceptH2O === true && k === "H2O")
+            ? 0
+            : this.atom[k] / v;
+        }).reduce(a, b => a + b);
+    }
+
     getComposition() {
       return { major: this.getMajor, trace: this.getTrace };
     }
@@ -339,136 +349,13 @@
       return this.atom;
     }
 
-
-  }
-
-
-  /** class Phase
-   *
-   * @param {*} _type 
-   * @param {*} _phaseName 
-   */
-  class Phase extends GeoChem {
-    constructor(_type, _phaseName) {
-      super();
-      this.type = _type;
-      this.name = _name;
-    };
-  }
-
-  var Phase = function (_type, _phaseName) {
-    var phase = Object.create(Phase.prototype);
-    phase.type = _type;
-    phase.name = _phaseName;
-
-    phase.major = (function () {
-      const obj = {}
-      for (let e of Phase.getMajorList()) {
-        obj[e] = 0;
-      }
-      return obj;
-    })()
-
-    phase.trace = (function () {
-      const obj = {}
-      for (let e of Phase.getTraceList()) {
-        obj[e] = 0;
-      }
-      return obj;
-    })()
-
-    phase.major0 = (function () {
-      const obj = {}
-      for (let e of Phase.getMajorList()) {
-        obj[e] = 0;
-      }
-      return obj;
-    })()
-
-    phase.atom = (function () {
-      const obj = {}
-      for (let e of Phase.getMajorList()) {
-        obj[e] = 0;
-      }
-      return obj;
-    })();
-
-    phase.profile = { ascend: {}, descend: {} };
-
-    phase.initializeProfile();
-
-    return phase;
-  }
-
-
-  Phase.Matrix = Matrix;
-
-
-  Phase.isPhase = function (obj, type) {
-    if (!Phase.prototype.isPrototypeOf(obj)) {
-      return false;
-    }
-    return type ? obj.type === type : true;
-  }
-
-
-
-  /* Phase のクラスメソッド
-   *
-  */
-
-  Phase.prototype = {
-
-
-    atom2compo(hydrous = false) {
-      let atom = this.atom;
-      let molar = Phase.getMolarValue();
-
-      let major = {};
-
-      let weight = 0;
-      for (let elem in molar) {
-        if (hydrous === false && elem === "H2O") {
-
-          continue;
-        }
-        if (!atom[elem]) major[elem] = 0;
-        if (atom[elem] < 0) return false;
-        major[elem] = atom[elem] * molar[elem];
-        weight += major[elem];
-      };
-
-      for (let elem in molar) {
-        if (hydrous === false && elem === "H2O") {
-          major.H2O = this.major.H2O;
-          continue;
-        }
-        major[elem] = major[elem] / weight * 100;
-      };
-
-      this.major = major;
-      return this;
-    },
-
-
-    getCationSum(hydrous = false) {
-      let cation = 0;
-      for (let elem in Phase.cationNum) {
-        if (hydrous === false && elem === "H2O") continue;
-        if (!this.atom[elem]) continue;
-        cation += this.atom[elem] / Phase.cationNum[elem];
-
-      }
-      return cation;
-    },
-
     getFeMgRatio() {
       return this.major.FeO / this.major.MgO * 40.32 / 71.84;
-    },
+    }
 
     getMgNumber() {
       return 100 / (1 + this.getFeMgRatio());
-    },
+    }
 
     pushProfile(_F, _T, _P, _path) {
       for (let e in this.major) {
@@ -483,17 +370,17 @@
       this.profile[_path].N.push(this.getAtomSum());
       this.profile[_path].x.push(0);
       return this;
-    },
+    }
 
     getProfile(_path) {
       return JSON.parse(JSON.stringify(this.profile[_path]));
-    },
+    }
 
     resetProfile() {
       this.initializeProfile();
       this.major0 = {};
       return this;
-    },
+    }
 
     profileToCsv(_path, separator = ",") {
       let str = ""
@@ -516,8 +403,40 @@
       }
       return str;
     }
+  }
 
-  };
+
+  /** class Phase
+   *
+   * @param {*} _type 
+   * @param {*} _phaseName 
+   */
+  class Phase extends GeoChem {
+    constructor(_type, _phaseName) {
+      super();
+      this.type = _type;
+      this.name = _name;
+    };
+  }
+
+
+  Phase.Matrix = Matrix;
+
+
+  Phase.isPhase = function (obj, type) {
+    if (!Phase.prototype.isPrototypeOf(obj)) {
+      return false;
+    }
+    return type ? obj.type === type : true;
+  }
+
+
+
+  /* Phase のクラスメソッド
+   *
+  */
+
+
 
   /** Create mixture new phase
    * 
