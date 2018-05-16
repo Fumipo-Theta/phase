@@ -186,6 +186,26 @@
       return this;
     }
 
+    normalizeComposition(exceptH2O = false) {
+      const elements = Object.keys(this.major);
+      const w = elements.map(e => {
+        return (e === "H2O")
+          ? (exceptH2O)
+            ? 0
+            : this.major[e]
+          : this.major[e];
+      }).reduce(a, b => a + b);
+
+      elements.map(e => {
+        this.major[e] = (e === "H2O")
+          ? (exceptH2O)
+            ? this.major[e]
+            : this.major[e] * 100 / w
+          : this.major[e] * 100 / w;
+      })
+
+      return this;
+    }
 
   }
 
