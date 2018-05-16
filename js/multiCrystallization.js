@@ -33,24 +33,164 @@
     root.phase = factory(root.Matrix);
   }
 }(this, function (_Matrix) {
-  let Matrix;
 
-  if (typeof require === "undefined" && typeof _Matrix === "object") {
-    Matrix = _Matrix;
-  } else {
-    Matrix = require('../../jslib/matrix.js');
+  const Matrix = (typeof require === 'undefined' && typeof _Matrix === 'object')
+    ? _Matrix
+    : require('../../jslib/matrix.js');
 
-  }
 
 
   /* _/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/ */
+  /** class GeoChem
+   * Provide calculation method for composition.
+   */
+  class GeoChem {
+    constructor() {
+      this.cationNum = GeoChem.getCationNum();
+      this.molarValue = GeoChem.getMolarValue();
+      this.majorList = GeoChem.getMajorList();
+      this.traceList = GeoChem.getTraceList();
+    }
+
+    initialize() {
+      this.major = this.initMajor();
+      this.major0 = this.initMajor();
+      this.trace = this.initTrace();
+      this.atom = this.initMajor();
+      this.profile = this.initProfile();
+      this.isInitialized = True;
+    }
+
+    static initComposition(elementList) {
+      const obj = {};
+      elementList.map(e => {
+        obj[e] = 0;
+      })
+      return obj;
+    }
+
+    initMajor() {
+      return GeoChem.initComposition(this.majorList);
+    }
+
+    initTrace() {
+      return GeoChem.initComposition(this.traceList);
+    }
+
+    static getCationNum() {
+      return {
+        "SiO2": 1,
+        "TiO2": 1,
+        "Al2O3": 2,
+        "FeO": 1,
+        "Fe2O3": 2,
+        "MgO": 1,
+        "CaO": 1,
+        "Na2O": 2,
+        "K2O": 2,
+        "P2O5": 2,
+        "MnO": 2,
+        "Cr2O3": 2,
+        "NiO": 1,
+        "H2O": 2
+      }
+    };
+
+    static getMolarValue() {
+      return {
+        SiO2: 60.06,
+        TiO2: 79.90,
+        Al2O3: 101.94,
+        FeO: 71.84,
+        MgO: 40.32,
+        Fe2O3: 159.69,
+        CaO: 56.08,
+        Na2O: 61.99,
+        K2O: 94.20,
+        P2O5: 141.94,
+        MnO: 70.94,
+        Cr2O3: 151.99,
+        NiO: 74.69,
+        H2O: 18
+      }
+    };
+
+    static getMajorList() {
+      return [
+        "SiO2", "TiO2", "Al2O3", "FeO",
+        "Fe2O3", "MgO", "CaO", "Na2O",
+        "K2O", "P2O5", "MnO", "Cr2O3",
+        "NiO", "H2O"
+      ];
+    }
+
+    static getTraceList() {
+      return [];
+    }
+
+    setMajorList(es) {
+      this.majorList = es;
+    }
+
+    setTraceList(es) {
+      this.traceList = es;
+    }
+
+    initializeProfile() {
+      const self = this;
+      const profile = {}
+      ["ascend", "descend"].map(path => {
+        self.majorList.map(e => {
+          profile[path][e] = [];
+        })
+        self.traceList.map(e => {
+          profile[path][e] = [];
+        })
+        ["F", "T", "N", "P", "x"].map(e => {
+          profile[path][e] = [];
+        })
+      })
+      return profile;
+    }
+
+    setComposition(_compo) {
+
+      Object.keys(_compo)
+
+      for (let prop in _compo) {
+        //console.log(prop)
+        if (this.major.hasOwnProperty(prop)) {
+          this.major[prop] = _compo[prop] * 1.;
+          this.major0[prop] = _compo[prop] * 1.;
+        } else if (this.trace.hasOwnProperty(prop)) {
+          this.trace[prop] = _compo[prop] * 1.;
+        }
+
+      }
+
+      return this;
+    }
+  }
+
 
   /** class Phase
    *
    * @param {*} _type 
    * @param {*} _phaseName 
-   * @param {*} _elementList 
    */
+  class Phase extends GeoChem {
+    constructor(_type, _phaseName) {
+      super();
+      this.type = _type;
+      this.name = _name;
+    };
+
+
+    setMajorList(es) {
+      this.
+    }
+  }
+
   var Phase = function (_type, _phaseName) {
     var phase = Object.create(Phase.prototype);
     phase.type = _type;
@@ -95,66 +235,6 @@
     return phase;
   }
 
-
-  /* Phase のプロパティとstatic method
-   *
-  */
-  Phase.cationNum = {
-    "SiO2": 1,
-    "TiO2": 1,
-    "Al2O3": 2,
-    "FeO": 1,
-    "Fe2O3": 2,
-    "MgO": 1,
-    "CaO": 1,
-    "Na2O": 2,
-    "K2O": 2,
-    "P2O5": 2,
-    "MnO": 2,
-    "Cr2O3": 2,
-    "NiO": 1,
-    "H2O": 2
-  };
-
-  Phase.getMolarValue = function () {
-    return {
-      SiO2: 60.06,
-      TiO2: 79.90,
-      Al2O3: 101.94,
-      FeO: 71.84,
-      MgO: 40.32,
-      Fe2O3: 159.69,
-      CaO: 56.08,
-      Na2O: 61.99,
-      K2O: 94.20,
-      P2O5: 141.94,
-      MnO: 70.94,
-      Cr2O3: 151.99,
-      NiO: 74.69,
-      H2O: 18
-    }
-  };
-
-  Phase.__majorList = [
-    "SiO2", "TiO2", "Al2O3", "FeO",
-    "Fe2O3", "MgO", "CaO", "Na2O",
-    "K2O", "P2O5", "MnO", "Cr2O3",
-    "NiO", "H2O"
-  ];
-
-  Phase.getMajorList = function () {
-    return Phase.__majorList
-  }
-
-  Phase.__traceList = [];
-
-  Phase.setTraceList = function (array) {
-    Phase.__traceList = array;
-  }
-
-  Phase.getTraceList = function () {
-    return Phase.__traceList;
-  };
 
   Phase.Matrix = Matrix;
 
