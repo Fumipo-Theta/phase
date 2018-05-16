@@ -186,6 +186,57 @@
       return this;
     }
 
+    getWeight(exceptH2O = True) {
+      const molar = GeoChem.getMolarValue();
+
+      return Object.entries(molar).map(kv => {
+        let k = kv[0];
+        let v = kv[1];
+        return (exceptH2O === True && k === "H2O")
+          ? 0
+          : (!this.atom.hasOwnProperty(k))
+            ? 0
+            : this.atom[k] * v
+      }).reduce(a, b => a + b);
+    }
+    /*
+    getWeight(hydrous = false) {
+      let molar = Phase.getMolarValue();
+      let weight = 0;
+      for (let elem in molar) {
+        if (hydrous === false && elem === "H2O") continue;
+        if (!this.atom[elem]) continue;
+        weight += this.atom[elem] * molar[elem];
+      };
+    */
+
+    getAtomSum(exceptH2O = true) {
+      const molar = GeoChem.getMolarValue();
+
+      return Object.entries(molar).map(kv => {
+        let k = kv[0];
+        let v = kv[1];
+        return (exceptH2O === true && k === "H2O")
+          ? 0
+          : (!this.atom.hasOwnProperty(k))
+            ? 0
+            : this.atom[k];
+      }).reduce(a, b => a + b);
+    }
+    /*
+    getAtomSum(hydrous = false) {
+      let molar = Phase.getMolarValue();
+
+      let atomSum = 0;
+      for (let elem in molar) {
+        if (hydrous === false && elem === "H2O") continue;
+        if (!this.atom[elem]) continue;
+        atomSum = atomSum + this.atom[elem];
+      };
+      return atomSum;
+    }
+    */
+
     normalizeComposition(exceptH2O = True) {
       const elements = Object.keys(this.major);
       const w = elements.map(e => {
@@ -206,6 +257,88 @@
 
       return this;
     }
+
+    compo2atom(exceptH2O = true, normalize = false) {
+      const molar = GeoChem.getMolarValue();
+      const major = this.major;
+
+      const atomSum = Object.entries(major).map(k => {
+        let m = molar[k];
+        return (exceptH2O === true && k === "H2O")
+          ? 0
+          : major[k] / m;
+      }).reduce(a, b => a + b);
+
+      Object.keys(this.major).map(k => {
+        let v = this.atom[k]
+        this.atom[k] = (!normalize)
+          ? v
+          : (exceptH2O === true && k === "H2O")
+            ? v
+            : v / atomSum
+      })
+      return this;
+    }
+
+    atom2compo(exceptH2O = true) {
+      const atom = this.atom;
+      const molar = GeoChem.getMolarValue();
+
+      const w = Object.entries(atom).map(kv => {
+        let k = kv[0], v = kv[1], m = molar[k];
+        return (exceptH2O === true && k === "H2O")
+          ? 0
+          : v * m;
+      }).reduce(a, b => a + b);
+
+      Object.entries(atom).map(kv => {
+        let k = kv[0], v = kv[1], m = molar[k];
+        this.major[k] = (exceptH2O === true && k === "H2O")
+          ? this.major[k]
+          : v * m / w;
+      })
+      /*
+      let weight = 0;
+      for (let elem in molar) {
+        if (hydrous === false && elem === "H2O") {
+
+          continue;
+        }
+        if (!atom[elem]) major[elem] = 0;
+        if (atom[elem] < 0) return false;
+        major[elem] = atom[elem] * molar[elem];
+        weight += major[elem];
+      };
+
+      for (let elem in molar) {
+        if (hydrous === false && elem === "H2O") {
+          major.H2O = this.major.H2O;
+          continue;
+        }
+        major[elem] = major[elem] / weight * 100;
+      };
+
+      this.major = major;
+      */
+      return this;
+    }
+
+    getComposition() {
+      return { major: this.getMajor, trace: this.getTrace };
+    }
+
+    getMajor() {
+      return this.major;
+    }
+
+    getTrace() {
+      return this.trace;
+    }
+
+    getMolarNumber() {
+      return this.atom;
+    }
+
 
   }
 
@@ -287,81 +420,6 @@
   Phase.prototype = {
 
 
-
-
-    normalizeComposition(hydrous = false) {
-      let w = 0;
-      for (let prop in this.major) {
-        if (prop === "H2O") {
-          w += (hydrous) ? this.major.H2O : 0;
-        } else {
-          w += this.major[prop];
-        }
-      }
-
-      for (let prop in this.major) {
-        if (prop === "H2O") {
-          this.major.H2O = (hydrous) ? this.major.H2O * 100 / w : this.major.H2O;
-        } else {
-          this.major[prop] = this.major[prop] * 100 / w;
-        }
-      };
-      return this;
-    },
-
-
-
-    getComposition() {
-      return { major: this.major, trace: this.trace };
-    },
-
-    getMajor() {
-      return this.major;
-    },
-
-    getTrace() {
-      return this.trace;
-    },
-
-    getMolarNumber() {
-      return this.atom;
-    },
-
-    compo2atom(hydrous = false, normalize = false) {
-      let molar = Phase.getMolarValue();
-      let major = this.major;
-
-      let atom = {};
-      let atomSum = 0
-      for (let elem in molar) {
-        if (hydrous === false && elem === "H2O") continue;
-        if (!major[elem]) atom[elem] = 0;
-        if (major[elem] < 0) return false;
-        atom[elem] = major[elem] / molar[elem];
-        atomSum += atom[elem];
-      };
-
-      if (normalize === true) {
-        for (let elem in atom) {
-          atom[elem] /= atomSum;
-        }
-      }
-      this.atom = atom;
-      return this;
-    },
-
-    getAtomSum(hydrous = false) {
-      let molar = Phase.getMolarValue();
-
-      let atomSum = 0;
-      for (let elem in molar) {
-        if (hydrous === false && elem === "H2O") continue;
-        if (!this.atom[elem]) continue;
-        atomSum = atomSum + this.atom[elem];
-      };
-      return atomSum;
-    },
-
     atom2compo(hydrous = false) {
       let atom = this.atom;
       let molar = Phase.getMolarValue();
@@ -392,16 +450,6 @@
       return this;
     },
 
-    getWeight(hydrous = false) {
-      let molar = Phase.getMolarValue();
-      let weight = 0;
-      for (let elem in molar) {
-        if (hydrous === false && elem === "H2O") continue;
-        if (!this.atom[elem]) continue;
-        weight += this.atom[elem] * molar[elem];
-      };
-      return weight;
-    },
 
     getCationSum(hydrous = false) {
       let cation = 0;
