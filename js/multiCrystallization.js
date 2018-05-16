@@ -168,6 +168,11 @@
       return this;
     }
 
+    updateComposition(_compo) {
+      this.setComposition(_compo);
+      return this;
+    }
+
     setMolar(_molar) {
       Object.entries(_molar).map(kv => {
         let k = kv[0];
@@ -180,6 +185,8 @@
       })
       return this;
     }
+
+
   }
 
 
@@ -260,29 +267,7 @@
   Phase.prototype = {
 
 
-    setMolar(_molar) {
-      for (let prop in _molar) {
-        if (this.atom.hasOwnProperty(prop)) {
-          this.atom[prop] = _molar[prop] * 1.;
-        } else {
-          this.atom[prop] = 0;
-        }
-      }
-      return this;
-    },
 
-    updateComposition(_compo) {
-      for (let prop in _compo) {
-        if (this.major.hasOwnProperty(prop)) {
-          this.major[prop] = _compo[prop] * 1.;
-          this.major0[prop] = _compo[prop] * 1.;
-        } else if (this.trace.hasOwnProperty(prop)) {
-          this.trace[prop] = _compo[prop] * 1.;
-        }
-
-      }
-      return this;
-    },
 
     normalizeComposition(hydrous = false) {
       let w = 0;
