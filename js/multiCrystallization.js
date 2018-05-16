@@ -155,19 +155,16 @@
 
     setComposition(_compo) {
 
-      Object.keys(_compo)
-
-      for (let prop in _compo) {
-        //console.log(prop)
-        if (this.major.hasOwnProperty(prop)) {
-          this.major[prop] = _compo[prop] * 1.;
-          this.major0[prop] = _compo[prop] * 1.;
-        } else if (this.trace.hasOwnProperty(prop)) {
-          this.trace[prop] = _compo[prop] * 1.;
+      Object.entries(_compo).map(kv => {
+        let k = kv[0];
+        let v = kv[1]
+        if (this.major.hasOwnProperty(k)) {
+          this.major[k] = v * 1.;
+          this.major0[k] = v * 1.;
+        } else if (this.trace.hasOwnProperty(k)) {
+          this.trace[k] = v * 1.;
         }
-
-      }
-
+      })
       return this;
     }
   }
@@ -184,11 +181,6 @@
       this.type = _type;
       this.name = _name;
     };
-
-
-    setMajorList(es) {
-      this.
-    }
   }
 
   var Phase = function (_type, _phaseName) {
