@@ -454,27 +454,6 @@
 
 
 
-  Phase.exchangePartitioningCoefficient = {
-    olivine: {
-      Fe_Mg: {
-        Beattie1993(T, P) {
-          return 0.303;
-        }
-      }
-    },
-
-    orthopyroxene: {
-      Fe_Mg: {
-        Beattie1993(T, P) {
-          return 0.284;
-        }
-      }
-    },
-
-    spinel: {
-
-    }
-  };
 
   Phase.transformProfile = {
     byEqualStep(_profile, _divNum = 1, _prop) {
