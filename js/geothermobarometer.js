@@ -42,7 +42,7 @@
      * @return [Number]:temperature
      */
     liquidusDropMG2008: liquid => H2O => {
-      const water = (H2O === "undefined")
+      const water = (H2O === undefined)
         ? liquid.major.H2O
         : H2O;
       return water * (40.4 - water * (2.97 - water * 0.0761));

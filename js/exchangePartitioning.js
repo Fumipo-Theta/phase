@@ -14,7 +14,9 @@
   };
 
   const orthopyroxene = {
-    Fe_Mg: liquid => (T, P) => 0.284
+    Fe_Mg: {
+      Beattie1993: liquid => (T, P) => 0.284
+    }
   }
 
   const spinel = {}

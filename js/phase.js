@@ -38,10 +38,13 @@
     ? _Matrix
     : require('../../jslib/matrix.js');
 
+  const sum = (a, b) => a + b;
 
   class ChemicalProfile {
     constructor(majorList, traceList) {
-      this.profile = this.reset(majorList, traceList)
+      this.optional = ["F", "T", "N", "P", "x"];
+      this.profile = this.reset(majorList, traceList);
+
     }
 
     reset(majorList, traceList) {
@@ -53,7 +56,7 @@
       traceList.map(e => {
         profile[e] = [];
       })
-      ["F", "T", "N", "P", "x"].map(e => {
+      this.optional.map(e => {
         profile[e] = [];
       })
 
@@ -311,9 +314,9 @@
       while (dX / absX > eps) {
         dX = 0;
         absX = 0;
-        for (i = 0; i < raw; i++) {
+        for (let i = 0; i < raw; i++) {
           let sum = 0;
-          for (j = 0; j < col; j++) {
+          for (let j = 0; j < col; j++) {
             if (i !== j) {
               sum += A[i][j] * x[j];
             }
@@ -359,7 +362,8 @@
           this.traceList
         )
       }
-      this.isInitialized = True;
+      this.isInitialized = true;
+      return this;
     }
 
     static initComposition(elementList) {
@@ -481,7 +485,7 @@
           : (!this.atom.hasOwnProperty(k))
             ? 0
             : this.atom[k] * v
-      }).reduce(a, b => a + b);
+      }).reduce(sum);
     }
     /*
     getWeight(hydrous = false) {
@@ -505,7 +509,7 @@
           : (!this.atom.hasOwnProperty(k))
             ? 0
             : this.atom[k];
-      }).reduce(a, b => a + b);
+      }).reduce(sum);
     }
     /*
     getAtomSum(hydrous = false) {
@@ -529,7 +533,7 @@
             ? 0
             : this.major[e]
           : this.major[e];
-      }).reduce(a, b => a + b);
+      }).reduce(sum);
 
       elements.map(e => {
         this.major[e] = (e === "H2O")
@@ -576,7 +580,7 @@
         return (exceptH2O === true && k === "H2O")
           ? 0
           : v * m;
-      }).reduce(a, b => a + b);
+      }).reduce(sum);
 
       Object.entries(atom).map(kv => {
         let k = kv[0], v = kv[1], m = molar[k];
@@ -617,11 +621,11 @@
           return (exceptH2O === true && k === "H2O")
             ? 0
             : this.atom[k] / v;
-        }).reduce(a, b => a + b);
+        }).reduce(sum);
     }
 
     getComposition() {
-      return { major: this.getMajor, trace: this.getTrace };
+      return { major: this.getMajor(), trace: this.getTrace() };
     }
 
     getMajor() {
@@ -1118,13 +1122,13 @@
       let self = this;
       for (let prop in this.major) {
         let component = objs.map((o) => o.phase.major[prop] * o.f)
-          .reduce((a, b) => a + b);
+          .reduce(sum);
         self.major[prop] = (this.major[prop] + massFraction * component) / (1 + massFraction);
       };
 
       for (let prop in this.trace) {
         let component = objs.map((o) => o.phase.trace[prop] * o.f)
-          .reduce((a, b) => a + b);
+          .reduce(sum);
         self.trace[prop] = (this.trace[prop] + massFraction * component) / (1 + massFraction);
       };
       return this;
