@@ -144,6 +144,194 @@
     }
   }
 
+  class Solver {
+    constructor() { }
+
+    /**
+     * 
+     * @param {Liquid} melt 
+     * @param {Solid} opx 
+     */
+    static opx_melt(melt, opx, method = "solve") {
+      const mv = GeoChem.getMolarValue();
+      return (T, P) => {
+        let A = [];
+        A[0] = [1, 1, 1, 1, 1, 1, 1, 1];
+        A[1] = [0, -1, opx.KD.Fe_Mg(T, P) * melt.major.FeO / melt.major.MgO, 0, 0, 0, 0, 0];
+        A[2] = [1 / mv.SiO2, -1 / mv.FeO, -1 / mv.MgO, 0, 0, 0, 0, 0];
+        A[3] = [0, 0, 0, 1, 0, 0, 0, 0];
+        A[4] = [0, 0, 0, 0, 1, 0, 0, 0];
+        A[5] = [0, 0, 0, 0, 0, 1, 0, 0];
+        A[6] = [0, 0, 0, 0, 0, 0, 1, 0];
+        A[7] = [0, 0, 0, 0, 0, 0, 0, 1];
+
+        let v = [100,
+          0,
+          0,
+          (opx.D.hasOwnProperty("TiO2")) ? melt.major.TiO2 * opx.D.TiO2(T, P) : 0,
+          (opx.D.hasOwnProperty("Al2O3")) ? melt.major.Al2O3 * opx.D.Al2O3(T, P) : 0,
+          (opx.D.hasOwnProperty("CaO")) ? melt.major.CaO * opx.D.CaO(T, P) : 0,
+          (opx.D.hasOwnProperty("Cr2O3")) ? melt.major.Cr2O3 * opx.D.Cr2O3(T, P) : 0,
+          (opx.D.hasOwnProperty("NiO")) ? melt.major.NiO * opx.D.NiO(T, P) : 0
+        ];
+
+        let x = Solver[method](A, v);
+
+        const trace = {};
+        for (let e in melt.trace) {
+          trace[e] = (opx.D.hasOwnProperty(e)) ? melt.trace[e] * opx.D[e](T, P) : 0;
+        }
+
+        return {
+          major: {
+            SiO2: x[0],
+            FeO: x[1],
+            MgO: x[2],
+            TiO2: x[3],
+            Al2O3: x[4],
+            CaO: x[5],
+            Cr2O3: x[6],
+            NiO: x[7],
+            Fe2O3: 0,
+            Na2O: 0,
+            K2O: 0,
+            P2O5: 0,
+            MnO: 0,
+            H2O: 0
+          },
+          trace: trace
+        }
+
+      }
+    }
+
+    static olivine_melt(melt, olivine, method = "solve") {
+      const mv = GeoChem.getMolarValue()
+      return (T, P) => {
+        let A = [];
+        A[0] = [1, 1, 1, 1, 1, 1, 1, 1];
+        A[1] = [-melt.major.FeO / melt.major.MgO, 1 / olivine.KD.Fe_Mg(T, P), 0, 0, 0, 0, 0, 0];
+        A[2] = [-1 / mv.MgO, -1 / mv.FeO, 2. / mv.SiO2, 0, 0, 0, 0, 0];
+        A[3] = [0, 0, 0, 1, 0, 0, 0, 0];
+        A[4] = [0, 0, 0, 0, 1, 0, 0, 0];
+        A[5] = [0, 0, 0, 0, 0, 1, 0, 0];
+        A[6] = [0, 0, 0, 0, 0, 0, 1, 0];
+        A[7] = [0, 0, 0, 0, 0, 0, 0, 1];
+
+        let v = [100,
+          0,
+          0,
+          (olivine.D.hasOwnProperty("TiO2")) ? melt.major.TiO2 * olivine.D.TiO2(T, P) : 0,
+          (olivine.D.hasOwnProperty("Al2O3")) ? melt.major.Al2O3 * olivine.D.Al2O3(T, P) : 0,
+          (olivine.D.hasOwnProperty("CaO")) ? melt.major.CaO * olivine.D.CaO(T, P) : 0,
+          (olivine.D.hasOwnProperty("Cr2O3")) ? melt.major.Cr2O3 * olivine.D.Cr2O3(T, P) : 0,
+          (olivine.D.hasOwnProperty("NiO")) ? melt.major.NiO * olivine.D.NiO(T, P) : 0
+        ];
+
+        let x = Solver[method](A, v, 1e-6, 0.9);
+
+        const trace = {};
+        for (let e in melt.trace) {
+          trace[e] = (olivine.D.hasOwnProperty(e)) ? melt.trace[e] * olivine.D[e](T, P) : 0;
+        }
+
+
+        return {
+          major: {
+            SiO2: x[2],
+            FeO: x[1],
+            MgO: x[0],
+            TiO2: x[3],
+            Al2O3: x[4],
+            CaO: x[5],
+            Cr2O3: x[6],
+            NiO: x[7],
+            Fe2O3: 0,
+            Na2O: 0,
+            K2O: 0,
+            P2O5: 0,
+            MnO: 0,
+            H2O: 0
+          },
+          trace: trace
+        }
+      }
+    }
+
+    static spinel_melt(melt, spinel, method = "solve") {
+      const mv = GeoChem.getMolarValue();
+      return (T, P) => {
+        const trace = {};
+        for (let e in melt.trace) {
+          trace[e] = (spinel.D.hasOwnProperty(e)) ? melt.trace[e] * spinel.D[e](T, P) : 0;
+        }
+
+
+        return {
+          major: {
+            SiO2: 0,
+            FeO: 0,
+            MgO: 0,
+            TiO2: 0,
+            Al2O3: 0,
+            CaO: 0,
+            Cr2O3: spinel.D.Cr2O3(T, P) * melt.major.Cr2O3,
+            NiO: spinel.D.NiO(T, P) * melt.major.NiO,
+            Fe2O3: 0,
+            Na2O: 0,
+            K2O: 0,
+            P2O5: 0,
+            MnO: 0,
+            H2O: 0
+          },
+          trace: trace
+        }
+
+
+      }
+    }
+
+    static solve(_A, _v, _eps = 1.0e-6, _w) {
+      let A = new Matrix(_A)
+      let v = new Matrix(_v.map((a) => [a]));
+
+      let invA = Matrix.inverse(A, _eps);
+      let x = Matrix.multiple(invA, v);
+
+      return x.m.map((a) => a[0]);
+    }
+
+    static SOR(A, v, eps = 1e-6, w = 1.) {
+      let dX = 1;
+      let absX = 1;
+      let raw = A.length;
+      let col = A[0].length;
+      let x = v.map((v) => 0);
+      let k = 0;
+      while (dX / absX > eps) {
+        dX = 0;
+        absX = 0;
+        for (i = 0; i < raw; i++) {
+          let sum = 0;
+          for (j = 0; j < col; j++) {
+            if (i !== j) {
+              sum += A[i][j] * x[j];
+            }
+          }
+
+          let newX = 1. / A[i][i] * (v[i] - sum);
+          dX += Math.abs(newX - x[i]);
+          absX += Math.abs(newX);
+          x[i] += w * (newX - x[i]);
+          k++
+        }
+      }
+      //console.log(k++)
+      return x;
+    }
+
+  }
+
   /* _/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/ */
   /** class GeoChem
    * Provide calculation method for composition.
@@ -510,39 +698,13 @@
       this.type = _type;
       this.name = _name;
     };
-  }
 
-
-  Phase.Matrix = Matrix;
-
-
-  Phase.isPhase = function (obj, type) {
-    if (!Phase.prototype.isPrototypeOf(obj)) {
-      return false;
+    static isPhase(obj) {
+      return obj instanceof Phase;
     }
-    return type ? obj.type === type : true;
+
+    getMixture() { }
   }
-
-
-
-  /* Phase のクラスメソッド
-   *
-  */
-
-
-
-  /** Create mixture new phase
-   * 
-   */
-
-  Phase.getMixture = function () {
-
-  }
-
-
-
-
-
 
   /*
     Phase.transformProfile = {
@@ -550,17 +712,17 @@
         const divNum = parseInt(_divNum);
         if (divNum < 1) return false;
         if (!_profile.hasOwnProperty(_prop)) return false;
-  
+   
         const l = _profile[_prop].length;
         const dF = (_profile[_prop][l - 1] - _profile[_prop][0]) / divNum;
         const newProfile = {};
         const props = Object.keys(_profile);
-  
+   
         for (let prop of props) {
           newProfile[prop] = [];
           newProfile[prop][0] = _profile[prop][0];
         }
-  
+   
         let F = _profile[_prop][0] + dF;
         let k = 0;
         for (let i = 1; i < divNum + 1; i++) {
@@ -568,32 +730,32 @@
             if (k === l - 2) break;
             k++;
           }
-  
+   
           let f = (F - _profile[_prop][k]) / (_profile[_prop][k + 1] - _profile[_prop][k]);
-  
+   
           for (let prop of props) {
             newProfile[prop][i] = _profile[prop][k] * (1 - f) + _profile[prop][k + 1] * f;
           }
           F += dF;
         }
-  
+   
         return newProfile;
       },
-  
+   
       byRadius(_profile, _positions) {
         if (_profile.length < 1) return false;
         if (_positions.length < 1) return false;
-  
+   
         const newProfile = {}
         const props = Object.keys(_profile[0]);
         for (let prop of props) {
           newProfile[prop] = [];
           //newProfile[prop][0] = _profile[prop][0];
         }
-  
+   
         profLen = _profile.length;
         posLen = _positions.length;
-  
+   
         let k = 0;
         for (let i = 0; i < posLen; i++) {
           while (_positions[i] > _profile[k + 1].x) {
@@ -604,202 +766,204 @@
           for (let prop of props) {
             newProfile[prop][i] = _profile[k][prop] * (1 - f) + _profile[k + 1][prop] * f;
           }
-  
+   
         }
         return newProfile;
       }
-  
+   
     }
     */
 
   /* solver
    * メルトとの平衡組成を計算する関数
   */
-  Phase.solver = {
-    opx_melt(method = "solve") {
-      let melt = this;
-      let mv = Phase.getMolarValue();
-      return function (T, P) {
-        let opx = this;
-        let A = [];
-        A[0] = [1, 1, 1, 1, 1, 1, 1, 1];
-        A[1] = [0, -1, opx.KD.Fe_Mg(T, P) * melt.major.FeO / melt.major.MgO, 0, 0, 0, 0, 0];
-        A[2] = [1 / mv.SiO2, -1 / mv.FeO, -1 / mv.MgO, 0, 0, 0, 0, 0];
-        A[3] = [0, 0, 0, 1, 0, 0, 0, 0];
-        A[4] = [0, 0, 0, 0, 1, 0, 0, 0];
-        A[5] = [0, 0, 0, 0, 0, 1, 0, 0];
-        A[6] = [0, 0, 0, 0, 0, 0, 1, 0];
-        A[7] = [0, 0, 0, 0, 0, 0, 0, 1];
-
-        let v = [100,
-          0,
-          0,
-          (opx.D.hasOwnProperty("TiO2")) ? melt.major.TiO2 * opx.D.TiO2(T, P) : 0,
-          (opx.D.hasOwnProperty("Al2O3")) ? melt.major.Al2O3 * opx.D.Al2O3(T, P) : 0,
-          (opx.D.hasOwnProperty("CaO")) ? melt.major.CaO * opx.D.CaO(T, P) : 0,
-          (opx.D.hasOwnProperty("Cr2O3")) ? melt.major.Cr2O3 * opx.D.Cr2O3(T, P) : 0,
-          (opx.D.hasOwnProperty("NiO")) ? melt.major.NiO * opx.D.NiO(T, P) : 0
-        ];
-
-        let x = Phase[method](A, v);
-
-        const trace = {};
-        for (let e in melt.trace) {
-          trace[e] = (opx.D.hasOwnProperty(e)) ? melt.trace[e] * opx.D[e](T, P) : 0;
-        }
-
-        return {
-          major: {
-            SiO2: x[0],
-            FeO: x[1],
-            MgO: x[2],
-            TiO2: x[3],
-            Al2O3: x[4],
-            CaO: x[5],
-            Cr2O3: x[6],
-            NiO: x[7],
-            Fe2O3: 0,
-            Na2O: 0,
-            K2O: 0,
-            P2O5: 0,
-            MnO: 0,
-            H2O: 0
-          },
-          trace: trace
-        }
-
-      }
-    },
-
-    olivine_melt(method = "solve") {
-      let melt = this;
-      let mv = Phase.getMolarValue();
-      return function (T, P) {
-        let olivine = this;
-        let A = [];
-        A[0] = [1, 1, 1, 1, 1, 1, 1, 1];
-        A[1] = [-melt.major.FeO / melt.major.MgO, 1 / olivine.KD.Fe_Mg(T, P), 0, 0, 0, 0, 0, 0];
-        A[2] = [-1 / mv.MgO, -1 / mv.FeO, 2. / mv.SiO2, 0, 0, 0, 0, 0];
-        A[3] = [0, 0, 0, 1, 0, 0, 0, 0];
-        A[4] = [0, 0, 0, 0, 1, 0, 0, 0];
-        A[5] = [0, 0, 0, 0, 0, 1, 0, 0];
-        A[6] = [0, 0, 0, 0, 0, 0, 1, 0];
-        A[7] = [0, 0, 0, 0, 0, 0, 0, 1];
-
-        let v = [100,
-          0,
-          0,
-          (olivine.D.hasOwnProperty("TiO2")) ? melt.major.TiO2 * olivine.D.TiO2(T, P) : 0,
-          (olivine.D.hasOwnProperty("Al2O3")) ? melt.major.Al2O3 * olivine.D.Al2O3(T, P) : 0,
-          (olivine.D.hasOwnProperty("CaO")) ? melt.major.CaO * olivine.D.CaO(T, P) : 0,
-          (olivine.D.hasOwnProperty("Cr2O3")) ? melt.major.Cr2O3 * olivine.D.Cr2O3(T, P) : 0,
-          (olivine.D.hasOwnProperty("NiO")) ? melt.major.NiO * olivine.D.NiO(T, P) : 0
-        ];
-
-        let x = Phase[method](A, v, 1e-6, 0.9);
-
-        const trace = {};
-        for (let e in melt.trace) {
-          trace[e] = (olivine.D.hasOwnProperty(e)) ? melt.trace[e] * olivine.D[e](T, P) : 0;
-        }
-
-
-        return {
-          major: {
-            SiO2: x[2],
-            FeO: x[1],
-            MgO: x[0],
-            TiO2: x[3],
-            Al2O3: x[4],
-            CaO: x[5],
-            Cr2O3: x[6],
-            NiO: x[7],
-            Fe2O3: 0,
-            Na2O: 0,
-            K2O: 0,
-            P2O5: 0,
-            MnO: 0,
-            H2O: 0
-          },
-          trace: trace
-        }
-      }
-    },
-
-    spinel_melt() {
-      let melt = this;
-      let mv = Phase.getMolarValue();
-      return function (T, P) {
-        let spinel = this;
-
-        const trace = {};
-        for (let e in melt.trace) {
-          trace[e] = (spinel.D.hasOwnProperty(e)) ? melt.trace[e] * spinel.D[e](T, P) : 0;
-        }
-
-
-        return {
-          major: {
-            SiO2: 0,
-            FeO: 0,
-            MgO: 0,
-            TiO2: 0,
-            Al2O3: 0,
-            CaO: 0,
-            Cr2O3: spinel.D.Cr2O3(T, P) * melt.major.Cr2O3,
-            NiO: spinel.D.NiO(T, P) * melt.major.NiO,
-            Fe2O3: 0,
-            Na2O: 0,
-            K2O: 0,
-            P2O5: 0,
-            MnO: 0,
-            H2O: 0
-          },
-          trace: trace
-        }
-
-      }
-    }
-  }
-
-  Phase.solve = function (_A, _v, _eps = 1.0e-6, _w) {
-    let A = new Phase.Matrix(_A)
-    let v = new Phase.Matrix(_v.map((a) => [a]));
-
-    let invA = Phase.Matrix.inverse(A, _eps);
-    let x = Phase.Matrix.multiple(invA, v);
-
-    return x.m.map((a) => a[0]);
-  }
-
-  Phase.SOR = function (A, v, eps = 1e-6, w = 1.) {
-    let dX = 1;
-    let absX = 1;
-    let raw = A.length;
-    let col = A[0].length;
-    let x = v.map((v) => 0);
-    let k = 0;
-    while (dX / absX > eps) {
-      dX = 0;
-      absX = 0;
-      for (i = 0; i < raw; i++) {
-        let sum = 0;
-        for (j = 0; j < col; j++) {
-          if (i !== j) {
-            sum += A[i][j] * x[j];
-          }
-        }
-
-        let newX = 1. / A[i][i] * (v[i] - sum);
-        dX += Math.abs(newX - x[i]);
-        absX += Math.abs(newX);
-        x[i] += w * (newX - x[i]);
-        k++
-      }
-    }
-    //console.log(k++)
-    return x;
-  }
+  /*
+   Phase.solver = {
+     opx_melt(method = "solve") {
+       let melt = this;
+       let mv = Phase.getMolarValue();
+       return function (T, P) {
+         let opx = this;
+         let A = [];
+         A[0] = [1, 1, 1, 1, 1, 1, 1, 1];
+         A[1] = [0, -1, opx.KD.Fe_Mg(T, P) * melt.major.FeO / melt.major.MgO, 0, 0, 0, 0, 0];
+         A[2] = [1 / mv.SiO2, -1 / mv.FeO, -1 / mv.MgO, 0, 0, 0, 0, 0];
+         A[3] = [0, 0, 0, 1, 0, 0, 0, 0];
+         A[4] = [0, 0, 0, 0, 1, 0, 0, 0];
+         A[5] = [0, 0, 0, 0, 0, 1, 0, 0];
+         A[6] = [0, 0, 0, 0, 0, 0, 1, 0];
+         A[7] = [0, 0, 0, 0, 0, 0, 0, 1];
+ 
+         let v = [100,
+           0,
+           0,
+           (opx.D.hasOwnProperty("TiO2")) ? melt.major.TiO2 * opx.D.TiO2(T, P) : 0,
+           (opx.D.hasOwnProperty("Al2O3")) ? melt.major.Al2O3 * opx.D.Al2O3(T, P) : 0,
+           (opx.D.hasOwnProperty("CaO")) ? melt.major.CaO * opx.D.CaO(T, P) : 0,
+           (opx.D.hasOwnProperty("Cr2O3")) ? melt.major.Cr2O3 * opx.D.Cr2O3(T, P) : 0,
+           (opx.D.hasOwnProperty("NiO")) ? melt.major.NiO * opx.D.NiO(T, P) : 0
+         ];
+ 
+         let x = Phase[method](A, v);
+ 
+         const trace = {};
+         for (let e in melt.trace) {
+           trace[e] = (opx.D.hasOwnProperty(e)) ? melt.trace[e] * opx.D[e](T, P) : 0;
+         }
+ 
+         return {
+           major: {
+             SiO2: x[0],
+             FeO: x[1],
+             MgO: x[2],
+             TiO2: x[3],
+             Al2O3: x[4],
+             CaO: x[5],
+             Cr2O3: x[6],
+             NiO: x[7],
+             Fe2O3: 0,
+             Na2O: 0,
+             K2O: 0,
+             P2O5: 0,
+             MnO: 0,
+             H2O: 0
+           },
+           trace: trace
+         }
+ 
+       }
+     },
+ 
+     olivine_melt(method = "solve") {
+       let melt = this;
+       let mv = Phase.getMolarValue();
+       return function (T, P) {
+         let olivine = this;
+         let A = [];
+         A[0] = [1, 1, 1, 1, 1, 1, 1, 1];
+         A[1] = [-melt.major.FeO / melt.major.MgO, 1 / olivine.KD.Fe_Mg(T, P), 0, 0, 0, 0, 0, 0];
+         A[2] = [-1 / mv.MgO, -1 / mv.FeO, 2. / mv.SiO2, 0, 0, 0, 0, 0];
+         A[3] = [0, 0, 0, 1, 0, 0, 0, 0];
+         A[4] = [0, 0, 0, 0, 1, 0, 0, 0];
+         A[5] = [0, 0, 0, 0, 0, 1, 0, 0];
+         A[6] = [0, 0, 0, 0, 0, 0, 1, 0];
+         A[7] = [0, 0, 0, 0, 0, 0, 0, 1];
+ 
+         let v = [100,
+           0,
+           0,
+           (olivine.D.hasOwnProperty("TiO2")) ? melt.major.TiO2 * olivine.D.TiO2(T, P) : 0,
+           (olivine.D.hasOwnProperty("Al2O3")) ? melt.major.Al2O3 * olivine.D.Al2O3(T, P) : 0,
+           (olivine.D.hasOwnProperty("CaO")) ? melt.major.CaO * olivine.D.CaO(T, P) : 0,
+           (olivine.D.hasOwnProperty("Cr2O3")) ? melt.major.Cr2O3 * olivine.D.Cr2O3(T, P) : 0,
+           (olivine.D.hasOwnProperty("NiO")) ? melt.major.NiO * olivine.D.NiO(T, P) : 0
+         ];
+ 
+         let x = Phase[method](A, v, 1e-6, 0.9);
+ 
+         const trace = {};
+         for (let e in melt.trace) {
+           trace[e] = (olivine.D.hasOwnProperty(e)) ? melt.trace[e] * olivine.D[e](T, P) : 0;
+         }
+ 
+ 
+         return {
+           major: {
+             SiO2: x[2],
+             FeO: x[1],
+             MgO: x[0],
+             TiO2: x[3],
+             Al2O3: x[4],
+             CaO: x[5],
+             Cr2O3: x[6],
+             NiO: x[7],
+             Fe2O3: 0,
+             Na2O: 0,
+             K2O: 0,
+             P2O5: 0,
+             MnO: 0,
+             H2O: 0
+           },
+           trace: trace
+         }
+       }
+     },
+ 
+     spinel_melt() {
+       let melt = this;
+       let mv = Phase.getMolarValue();
+       return function (T, P) {
+         let spinel = this;
+ 
+         const trace = {};
+         for (let e in melt.trace) {
+           trace[e] = (spinel.D.hasOwnProperty(e)) ? melt.trace[e] * spinel.D[e](T, P) : 0;
+         }
+ 
+ 
+         return {
+           major: {
+             SiO2: 0,
+             FeO: 0,
+             MgO: 0,
+             TiO2: 0,
+             Al2O3: 0,
+             CaO: 0,
+             Cr2O3: spinel.D.Cr2O3(T, P) * melt.major.Cr2O3,
+             NiO: spinel.D.NiO(T, P) * melt.major.NiO,
+             Fe2O3: 0,
+             Na2O: 0,
+             K2O: 0,
+             P2O5: 0,
+             MnO: 0,
+             H2O: 0
+           },
+           trace: trace
+         }
+ 
+       }
+     }
+   }
+ 
+   Phase.solve = function (_A, _v, _eps = 1.0e-6, _w) {
+     let A = new Phase.Matrix(_A)
+     let v = new Phase.Matrix(_v.map((a) => [a]));
+ 
+     let invA = Phase.Matrix.inverse(A, _eps);
+     let x = Phase.Matrix.multiple(invA, v);
+ 
+     return x.m.map((a) => a[0]);
+   }
+ 
+   Phase.SOR = function (A, v, eps = 1e-6, w = 1.) {
+     let dX = 1;
+     let absX = 1;
+     let raw = A.length;
+     let col = A[0].length;
+     let x = v.map((v) => 0);
+     let k = 0;
+     while (dX / absX > eps) {
+       dX = 0;
+       absX = 0;
+       for (i = 0; i < raw; i++) {
+         let sum = 0;
+         for (j = 0; j < col; j++) {
+           if (i !== j) {
+             sum += A[i][j] * x[j];
+           }
+         }
+ 
+         let newX = 1. / A[i][i] * (v[i] - sum);
+         dX += Math.abs(newX - x[i]);
+         absX += Math.abs(newX);
+         x[i] += w * (newX - x[i]);
+         k++
+       }
+     }
+     //console.log(k++)
+     return x;
+   }
+   */
 
   /** class Solid extends Phase
    *
