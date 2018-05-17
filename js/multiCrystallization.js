@@ -152,9 +152,9 @@
      * @param {Liquid} melt 
      * @param {Solid} opx 
      */
-    static opx_melt(melt, opx, method = "solve") {
+    static opx_melt(melt, method = "solve") {
       const mv = GeoChem.getMolarValue();
-      return (T, P) => {
+      return opx => (T, P) => {
         let A = [];
         A[0] = [1, 1, 1, 1, 1, 1, 1, 1];
         A[1] = [0, -1, opx.KD.Fe_Mg(T, P) * melt.major.FeO / melt.major.MgO, 0, 0, 0, 0, 0];
@@ -205,9 +205,9 @@
       }
     }
 
-    static olivine_melt(melt, olivine, method = "solve") {
+    static olivine_melt(melt, method = "solve") {
       const mv = GeoChem.getMolarValue()
-      return (T, P) => {
+      return olivine => (T, P) => {
         let A = [];
         A[0] = [1, 1, 1, 1, 1, 1, 1, 1];
         A[1] = [-melt.major.FeO / melt.major.MgO, 1 / olivine.KD.Fe_Mg(T, P), 0, 0, 0, 0, 0, 0];
@@ -258,9 +258,9 @@
       }
     }
 
-    static spinel_melt(melt, spinel, method = "solve") {
+    static spinel_melt(melt, method = "solve") {
       const mv = GeoChem.getMolarValue();
-      return (T, P) => {
+      return spinel => (T, P) => {
         const trace = {};
         for (let e in melt.trace) {
           trace[e] = (spinel.D.hasOwnProperty(e)) ? melt.trace[e] * spinel.D[e](T, P) : 0;
@@ -546,21 +546,24 @@
       const molar = GeoChem.getMolarValue();
       const major = this.major;
 
-      const atomSum = Object.entries(major).map(k => {
-        let m = molar[k];
-        return (exceptH2O === true && k === "H2O")
+      Object.entries(major).map(kv => {
+        let k = kv[0], v = kv[1], m = molar[k];
+        this.atom[k] = (exceptH2O === true && k === "H2O")
           ? 0
-          : major[k] / m;
-      }).reduce(a, b => a + b);
-
-      Object.keys(this.major).map(k => {
-        let v = this.atom[k]
-        this.atom[k] = (!normalize)
-          ? v
-          : (exceptH2O === true && k === "H2O")
-            ? v
-            : v / atomSum
+          : v / m
       })
+
+      if (normalize) {
+        const atomSum = this.getAtomSum(exceptH2O);
+
+        Object.keys(major).map(k => {
+          let v = this.atom[k]
+          this.atom[k] = (exceptH2O === true && k === "H2O")
+            ? 0
+            : v / atomSum
+        })
+      }
+
       return this;
     }
 
@@ -693,10 +696,9 @@
    * @param {*} _phaseName 
    */
   class Phase extends GeoChem {
-    constructor(_type, _phaseName) {
+    constructor(name) {
       super();
-      this.type = _type;
-      this.name = _name;
+      this.name = name;
     };
 
     static isPhase(obj) {
@@ -967,86 +969,84 @@
 
   /** class Solid extends Phase
    *
-   * @param {*} _phaseName 
+   * @param {*} name 
    */
-  function Solid(_phaseName) {
-    var solid = Object.create(Solid.prototype);
-    Object.assign(solid, Phase("solid", _phaseName));
+  class Solid extends Phase {
+    constructor(name) {
+      super(name);
+      this.D = {};
+      this.KD = {};
+      this.dN = 0;
+      this.solver = {};
+      this.answerVector = {};
+    }
 
-    solid.D = {}; // Dictionary of partitioning coefficients
-    solid.KD = {}; // Dictionary of exchange partitioning coefficients
-    //solid.stoichiometry = _stoichiometry;
-    solid.dN; // atom fraction;
-    solid.solver = {};
-    solid.answerVector = {};
+    static isSolid(obj) {
+      return obj instanceof Solid;
+    }
 
-    return solid;
-  };
-
-  Solid.isSolid = function (obj) {
-    return Phase.isPhase(obj, "solid");
-  };
-
-  Solid.prototype = {
-    setAtomFraction(_dN) {
-      this.dN = _dN;
+    setAtomFraction(dN) {
+      this.dN = dN;
       return this;
-    },
+    }
 
-    setD(_elemName, _Dfunc) {
-      this.D[_elemName] = _Dfunc;
+    setD(opt) {
+      Object.entries(opt).map(o => {
+        let e = o[0], D = o[1];
+        this.D[e] = D
+      })
       return this;
-    },
+    }
 
-    setKD(_elementRatio, _KDfunc) {
-      this.KD[_elementRatio] = _KDfunc;
+    setKD(opt) {
+      Object.entries(opt).map(o => {
+        let e = o[0], KD = o[1];
+        this.KD[e] = KD
+      })
       return this;
-    },
+    }
 
     getMeltMgNumber() {
       return 100 / (1 + this.getFeMgRatio() / this.KD.Fe_Mg);
-    },
+    }
 
     setRadius(_beforeR, _afterR, _path) {
-      const l = this.profile[_path].F.length;
-      const f = (Math.pow(_afterR, 3) - Math.pow(_beforeR, 3)) / this.profile[_path].F[l - 1];
+      const l = this.profile[_path].profile.F.length;
+      const f = (Math.pow(_afterR, 3) - Math.pow(_beforeR, 3)) / this.profile[_path].profile.F[l - 1];
       for (let i = 0; i < l; i++) {
-        this.profile[_path].x[i] = Math.pow(f * this.profile[_path].F[i] + Math.pow(_beforeR, 3), 0.333333);
+        this.profile[_path].profile.x[i] = Math.pow(f * this.profile[_path].F[i] + Math.pow(_beforeR, 3), 0.333333);
       }
       return this;
-    },
+    }
 
     setSolver(_adjacentPhaseName, _solverFunc) {
-      this.solver[_adjacentPhaseName] = _solverFunc.bind(this);
+      this.solver[_adjacentPhaseName] = _solverFunc(this);
       return this;
-    },
+    }
 
     setAnswerVector(_adjacentPhaseName, _answerVector) {
       this.answerVector[_adjacentPhaseName] = _answerVector;
       return this;
-    },
+    }
 
     equilibrate(_adjacentPhaseName, _T, _P) {
       const equiCompo = this.solver[_adjacentPhaseName](_T, _P);
       this.major = equiCompo.major;
       this.trace = equiCompo.trace;
       return this;
-    },
+    }
 
-  };
-  Object.setPrototypeOf(Solid.prototype, Phase.prototype);
-
-  Solid.compensateFe = {
-    spinel: function (_spinel) {
-      // 全鉄=Fe2+ + Fe3+
-      // チャージバランス
-
-      let atom = _spinel.atom;
-      let atomSum = _spinel.getAtomSum();
-      let oxygenNum = 16;
-
+    compensateFe(mineral) {
+      const method = {
+        spinel: spinel => {
+          let atom = spinel.atom;
+          let atomSum = spinel.getAtomSum();
+          let oxygenNum = 16;
+        }
+      }
     }
   }
+
 
 
 
@@ -1054,61 +1054,60 @@
    * 
    * @param {*} _phaseName 
    */
-  function Liquid(_phaseName) {
-    var liquid = Object.create(Liquid.prototype);
-    Object.assign(liquid, Phase("liquid", _phaseName));
-    liquid.fFe2 = 1;
-    return liquid;
-  }
+  class Liquid extends Phase {
+    constructor(name) {
+      super(name);
+      this.fFe2 = 1;
+    }
 
-  Liquid.isLiquid = function (obj) {
-    return Phase.isPhase(obj, "liquid");
-  }
+    static isLiquid(obj) {
+      return obj instanceof Liquid;
+    }
 
-  Liquid.prototype = {
-    setH2O(_waterContent) {
-      this.major.H2O = _waterContent;
+    setH2O(waterContent) {
+      this.major.H2O = waterContent;
       return this;
-    },
+    }
 
     setFe2Ratio(Fe2Fraction) {
       this.fFe2 = Fe2Fraction; // Fe2 / (Fe2 + Fe3);
       return this;
-    },
+    }
 
     compensateFe() {
       this.compo2atom().atom2compo();
       return this;
-    },
+    }
 
-    compo2atom(hydrous = false, normalize = false) {
-      let molar = Phase.getMolarValue();
-      let compo = this.major;
+    compo2atom(exceptH2O = true, normalize = false) {
+      const molar = GeoChem.getMolarValue();
+      const major = this.major;
 
-      let atom = {};
-      let atomSum = 0
-      for (let elem in molar) {
-        if (hydrous === false && elem === "H2O") continue;
-        if (!compo[elem]) atom[elem] = 0;
-        if (compo[elem] < 0) return false;
-        atom[elem] = compo[elem] / molar[elem];
-        atomSum += atom[elem];
-      };
+      Object.entries(major).map(kv => {
+        let k = kv[0], v = kv[1], m = molar[k];
+        this.atom[k] = (exceptH2O === true && k === "H2O")
+          ? 0
+          : v / m
+      })
 
-      let totalFe = atom.FeO + atom.Fe2O3 * 2;
-      atom.FeO = totalFe * this.fFe2;
-      atom.Fe2O3 = totalFe * (1 - this.fFe2) * 0.5;
+      const totalFe = this.atom.FeO + this.atom.Fe2O3 * 2;
+      this.atom.FeO = totalFe * this.fFe2;
+      this.atom.Fe2O3 = totalFe * (1 - this.fFe2) * 0.5;
 
 
+      if (normalize) {
+        const atomSum = this.getAtomSum(exceptH2O);
 
-      if (normalize === true) {
-        for (let elem in atom) {
-          atom[elem] /= atomSum;
-        }
+        Object.keys(major).map(k => {
+          let v = this.atom[k]
+          this.atom[k] = (exceptH2O === true && k === "H2O")
+            ? 0
+            : v / atomSum
+        })
       }
-      this.atom = atom;
+
       return this;
-    },
+    }
 
     /**
      * 
@@ -1129,59 +1128,15 @@
         self.trace[prop] = (this.trace[prop] + massFraction * component) / (1 + massFraction);
       };
       return this;
-    },
+    }
 
     desolve(obj, massFraction) {
 
       return this;
     }
-
-  };
-  Object.setPrototypeOf(Liquid.prototype, Phase.prototype);
-
-
-
-  /** Object Crystal */
-  /** ver 1.5 new Crystal 
-   * _Phases : [Phase,Phase,...]
-  */
-
-  var Crystal = {};
-
-  Crystal.getAffinity = function (_liquid, _solids) {
-    let affinity = {};
-    // 結晶化のアフィニティが1より大きい相をtrueとする
-    for (let phase of _solids) {
-      affinity[phase.name] = true;
-    }
-
-    return affinity;
   }
 
-  /**	Crystal.getTinySolid
-   * return tinySolid:{
-   * 	major:{},
-   * 	atom:{}
-   * }
-   * 
-   * To use:
-   * let opx = new Solid(...), olivine = new Solid(...);
-   * let liquid = new Liquid(...);
-   * let tinySolid = {};
-   *
-   * 
-   * tinySolid.opx = getTinySolid.opx(dN.opx); // equilibrium opx whose atom number is dN.opx;
-   * tinySolid.olivine = getTinySolid.olivine(dN.olivine);
-   */
-  Phase.yieldEquilibriumCompo = function () {
-    let adjasentPhase = this;
 
-    return function (_dM) {
-      let interestPhase = this;
-
-      return interestPhase.getEquilibriumCompo(adjasentPhase);
-    }
-  }
 
 
   /** Resampler */
@@ -1261,90 +1216,9 @@
     return newProfile;
   }
 
-
-  /* transFormSectionToEqualStep */
-  Phase.transformSectionToEqualStep = function (sectionObj, stepSize = 0) {
-    // If stepSize is default, automatically set stepSize
-    if (profile.f == undefined) return sectionObj;
-
-    return newProfile;
-  }
-
-  /* transformProfileByRadius */
-  Phase.transformProfileByRadius = function (profile, positions) {
-    if (positions.length < 1) return false;
-
-    const newProfile = [];
-    const keys = Object.keys(profile[0]);
-    const positionNum = positions.length;
-    const profileLength = profile.length;
-
-    let k = 0;
-    for (let i = 0; i < positionNum; i = (i + 1) | 0) {
-      while (positions[i] > profile[k + 1].x) {
-        if (k == profileLength - 2) break;
-        k = (k + 1) | 0;
-      }
-
-      let factor = (positions[i] - profile[k].x) / (profile[k + 1].x - profile[k].x);
-
-      newProfile[i] = {};
-      keys.map((v) => {
-        newProfile[i][v] = profile[k][v] * (1 - factor) + profile[k + 1][v] * factor;
-      });
-
-    }
-
-
-    return newProfile
-  }
-
-  /* divideProfileEqualStep */
-  Phase.divideProfileEqualStep = function (_profile, _divNum, _prop = 'x') {
-    const divideNum = parseInt(_divNum);
-    if (divideNum < 1) return _profile;
-    if (!_profile[_prop]) return _profile;
-
-    let newProfile = {};
-    const keys = Object.keys(_profile);
-
-    let l = _profile[_prop].length;
-    let extent = { 'max': _profile[_prop][l - 1], 'min': _profile[_prop][0] };
-
-    newProfile = {
-      c: [],
-      x: []
-    };
-
-    newProfile.x[0] = _profile.x[0];
-    newProfile.c[0] = _profile.c[0];
-    let dF = (extent.max - extent.min) / _divNum;
-    let F = _profile[_prop][0] + dF;
-    let k = 0;
-
-    for (let i = 1; i < _divNum + 1; i = (i + 1) | 0) {
-      while (F > _profile[_prop][k + 1]) {
-        if (k == l - 2) break;
-        k = (k + 1) | 0;
-      }
-
-      let factor = (F - _profile[_prop][k]) / (_profile[_prop][k + 1] - _profile[_prop][k]);
-
-      newProfile.x[i] = F;
-      newProfile.c[i] = _profile.c[k] * (1 - factor) + _profile.c[k + 1] * factor;
-
-      F += dF;
-    }
-
-
-    return newProfile;
-  }
-
-
-
   return {
-    Phase: Phase,
-    Solid: Solid,
-    Liquid: Liquid
+    Solver,
+    Solid,
+    Liquid
   };
 }));
