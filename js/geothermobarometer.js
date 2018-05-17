@@ -24,16 +24,22 @@
     * 
     * liquidT = thermometer.Sugawara2000.bind(liquid);
     * T = liquidT(P);
+    * 
+    * @param liquid[Liquid]: instance of Liquid
+    * @param P[Number]: pressure [GPa]
+    * @return [Number]: temperature [K]
     */
-    Sugawara2000: liquid => pressure => {
+    Sugawara2000: liquid => P => {
       const atom = liquid.atom;
       const atomSum = liquid.getAtomSum(true, false) * 0.01;
       const T = 1446 + (-1.44 * atom.SiO2 - 0.5 * atom.FeO + 12.32 * atom.MgO - 3.899 * atom.CaO) / atomSum;
-      return T + 0.0043 * pressure;
+      return T + 0.0043 * P;
     },
 
     /** Mederd & Grove(2008) Liquidus drop by water (wt %)
-     * 
+     * @param liquid[Liquid]: instance of Liquid
+     * @param H2O[Number]: water content [wt%]
+     * @return [Number]:temperature
      */
     liquidusDropMG2008: liquid => H2O => {
       const water = (H2O === "undefined")
@@ -43,9 +49,11 @@
     },
 
     /** olivineSpinel thermometer
-   * @param _P: pressure [GPa]
-   * @return temperature [K]
-   */
+    * @param olivine[Solid]: instance of Solid
+    * @param spinel[Solid]: instance of Solid
+    * @param P[Number]: pressure [GPa]
+    * @return [Number]: temperature [K]
+    */
     olivineSpinelBs1991: (olivine, spinel) => P => {
       let R = spinel.atom.Fe2O3 + spinel.atom.Al2O3 + spinel.atom.Cr2O3;
 
@@ -61,10 +69,11 @@
   const oxybarometer = {
     /** olivineSpinel oxygen fugacity
     * Ballhaus et al. (1991)
-    * 
-    * @param _P : pressure [GPa]
-    * @param _T : temperature [K]
-    * @return divergence of logfO2 from FMQ buffer
+    * @param olivine[Solid]: instance of Solid
+    * @param spinel[Solid]: instance of Solid
+    * @param P[Number] : pressure [GPa]
+    * @param T[Number] : temperature [K]
+    * @return [Number]: divergence of logfO2 from FMQ buffer
     */
     olivineSpinelBs1991: (olivine, spinel) => (T, P) => {
       let R = spinel.atom.Fe2O3 + spinel.atom.Al2O3 + spinel.atom.Cr2O3;

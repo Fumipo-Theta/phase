@@ -39,6 +39,110 @@
     : require('../../jslib/matrix.js');
 
 
+  class ChemicalProfile {
+    constructor(majorList, traceList) {
+      this.profile = this.reset(majorList, traceList)
+    }
+
+    reset(majorList, traceList) {
+      const profile = {}
+
+      majorList.map(e => {
+        profile[e] = [];
+      })
+      traceList.map(e => {
+        profile[e] = [];
+      })
+      ["F", "T", "N", "P", "x"].map(e => {
+        profile[e] = [];
+      })
+
+      return profile
+    }
+
+    push(major, trace, F, T, P, N) {
+      for (let e in major) {
+        this.profile[e].push(major[e]);
+      }
+      for (let e in trace) {
+        this.profile[e].push(trace[e]);
+      }
+      this.profile.F.push(F);
+      this.profile.T.push(T);
+      this.profile.P.push(P);
+      this.profile.N.push(N);
+      this.profile.x.push(0);
+    }
+
+    get() {
+      return JSON.parse(JSON.stringify(this.profile));
+    }
+
+    transformByEqualStep(_divNum = 1, _prop) {
+      const _profile = this.profile;
+      const divNum = parseInt(_divNum);
+      if (divNum < 1) throw new Error("divNum must positive");
+      if (!_profile.hasOwnProperty(_prop)) throw new Error(`profile does not have key [${_prop}]`);
+
+      const l = _profile[_prop].length;
+      const dF = (_profile[_prop][l - 1] - _profile[_prop][0]) / divNum;
+      const newProfile = {};
+      const props = Object.keys(_profile);
+
+      props.map(k => {
+        newProfile[k] = [_profile[k][0]];
+      })
+
+
+      let F = _profile[_prop][0] + dF;
+      let k = 0;
+      for (let i = 1; i < divNum + 1; i++) {
+        while (F > _profile[_prop][k + 1]) {
+          if (k === l - 2) break;
+          k++;
+        }
+
+        let f = (F - _profile[_prop][k]) / (_profile[_prop][k + 1] - _profile[_prop][k]);
+
+        for (let prop of props) {
+          newProfile[prop][i] = _profile[prop][k] * (1 - f) + _profile[prop][k + 1] * f;
+        }
+        F += dF;
+      }
+
+      return newProfile;
+    }
+
+    transformByRadius(_positions) {
+      const profile = this.profile;
+      if (_profile.length < 1) throw new Error("Length of profile is 0");
+      if (_positions.length < 1) throw new Error("Length of positions is 0");
+
+      const newProfile = {}
+      const props = Object.keys(_profile[0]);
+      for (let prop of props) {
+        newProfile[prop] = [];
+        //newProfile[prop][0] = _profile[prop][0];
+      }
+
+      profLen = _profile.length;
+      posLen = _positions.length;
+
+      let k = 0;
+      for (let i = 0; i < posLen; i++) {
+        while (_positions[i] > _profile[k + 1].x) {
+          if (k === profLen - 2) break;
+          k++;
+        }
+        let f = (_positions[i] - _profile[k].x) / (_profile[k + 1].x - _profile[k].x);
+        for (let prop of props) {
+          newProfile[prop][i] = _profile[k][prop] * (1 - f) + _profile[k + 1][prop] * f;
+        }
+
+      }
+      return newProfile;
+    }
+  }
 
   /* _/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/ */
   /** class GeoChem
@@ -57,7 +161,16 @@
       this.major0 = this.initMajor();
       this.trace = this.initTrace();
       this.atom = this.initMajor();
-      this.profile = this.initProfile();
+      this.profile = {
+        "ascend": new ChemicalProfile(
+          this.majorList,
+          this.traceList
+        ),
+        "descend": new ChemicalProfile(
+          this.majorList,
+          this.traceList
+        )
+      }
       this.isInitialized = True;
     }
 
@@ -134,23 +247,6 @@
 
     setTraceList(es) {
       this.traceList = es;
-    }
-
-    initializeProfile() {
-      const self = this;
-      const profile = {}
-      ["ascend", "descend"].map(path => {
-        self.majorList.map(e => {
-          profile[path][e] = [];
-        })
-        self.traceList.map(e => {
-          profile[path][e] = [];
-        })
-        ["F", "T", "N", "P", "x"].map(e => {
-          profile[path][e] = [];
-        })
-      })
-      return profile;
     }
 
     setComposition(_compo) {
@@ -357,34 +453,31 @@
       return 100 / (1 + this.getFeMgRatio());
     }
 
-    pushProfile(_F, _T, _P, _path) {
-      for (let e in this.major) {
-        this.profile[_path][e].push(this.major[e]);
-      }
-      for (let e in this.trace) {
-        this.profile[_path][e].push(this.trace[e]);
-      }
-      this.profile[_path].F.push(_F);
-      this.profile[_path].T.push(_T);
-      this.profile[_path].P.push(_P);
-      this.profile[_path].N.push(this.getAtomSum());
-      this.profile[_path].x.push(0);
+    pushProfile(F, T, P, path) {
+      this.profile[path].push(
+        this.major,
+        this.trace,
+        F,
+        T,
+        P,
+        this.getAtomSum()
+      )
       return this;
     }
 
-    getProfile(_path) {
-      return JSON.parse(JSON.stringify(this.profile[_path]));
+    getProfile(path) {
+      return this.profile[path].get();
     }
 
-    resetProfile() {
-      this.initializeProfile();
+    resetProfile(path) {
+      this.profile[path].reset(this.majorList, this.traceList);
       this.major0 = {};
       return this;
     }
 
-    profileToCsv(_path, separator = ",") {
+    profileToCsv(path, separator = ",") {
       let str = ""
-      let profile = this.profile[_path];
+      let profile = this.getProfile(path);
       const keys = Object.keys(profile);
 
       end = new RegExp(separator + "$");
@@ -447,79 +540,77 @@
   }
 
 
-  /** partitioning coefficients
-   *  すべて最終的に（T,P)の関数
-   */
 
 
 
 
-
-  Phase.transformProfile = {
-    byEqualStep(_profile, _divNum = 1, _prop) {
-      const divNum = parseInt(_divNum);
-      if (divNum < 1) return false;
-      if (!_profile.hasOwnProperty(_prop)) return false;
-
-      const l = _profile[_prop].length;
-      const dF = (_profile[_prop][l - 1] - _profile[_prop][0]) / divNum;
-      const newProfile = {};
-      const props = Object.keys(_profile);
-
-      for (let prop of props) {
-        newProfile[prop] = [];
-        newProfile[prop][0] = _profile[prop][0];
-      }
-
-      let F = _profile[_prop][0] + dF;
-      let k = 0;
-      for (let i = 1; i < divNum + 1; i++) {
-        while (F > _profile[_prop][k + 1]) {
-          if (k === l - 2) break;
-          k++;
-        }
-
-        let f = (F - _profile[_prop][k]) / (_profile[_prop][k + 1] - _profile[_prop][k]);
-
+  /*
+    Phase.transformProfile = {
+      byEqualStep(_profile, _divNum = 1, _prop) {
+        const divNum = parseInt(_divNum);
+        if (divNum < 1) return false;
+        if (!_profile.hasOwnProperty(_prop)) return false;
+  
+        const l = _profile[_prop].length;
+        const dF = (_profile[_prop][l - 1] - _profile[_prop][0]) / divNum;
+        const newProfile = {};
+        const props = Object.keys(_profile);
+  
         for (let prop of props) {
-          newProfile[prop][i] = _profile[prop][k] * (1 - f) + _profile[prop][k + 1] * f;
+          newProfile[prop] = [];
+          newProfile[prop][0] = _profile[prop][0];
         }
-        F += dF;
-      }
-
-      return newProfile;
-    },
-
-    byRadius(_profile, _positions) {
-      if (_profile.length < 1) return false;
-      if (_positions.length < 1) return false;
-
-      const newProfile = {}
-      const props = Object.keys(_profile[0]);
-      for (let prop of props) {
-        newProfile[prop] = [];
-        //newProfile[prop][0] = _profile[prop][0];
-      }
-
-      profLen = _profile.length;
-      posLen = _positions.length;
-
-      let k = 0;
-      for (let i = 0; i < posLen; i++) {
-        while (_positions[i] > _profile[k + 1].x) {
-          if (k === profLen - 2) break;
-          k++;
+  
+        let F = _profile[_prop][0] + dF;
+        let k = 0;
+        for (let i = 1; i < divNum + 1; i++) {
+          while (F > _profile[_prop][k + 1]) {
+            if (k === l - 2) break;
+            k++;
+          }
+  
+          let f = (F - _profile[_prop][k]) / (_profile[_prop][k + 1] - _profile[_prop][k]);
+  
+          for (let prop of props) {
+            newProfile[prop][i] = _profile[prop][k] * (1 - f) + _profile[prop][k + 1] * f;
+          }
+          F += dF;
         }
-        let f = (_positions[i] - _profile[k].x) / (_profile[k + 1].x - _profile[k].x);
+  
+        return newProfile;
+      },
+  
+      byRadius(_profile, _positions) {
+        if (_profile.length < 1) return false;
+        if (_positions.length < 1) return false;
+  
+        const newProfile = {}
+        const props = Object.keys(_profile[0]);
         for (let prop of props) {
-          newProfile[prop][i] = _profile[k][prop] * (1 - f) + _profile[k + 1][prop] * f;
+          newProfile[prop] = [];
+          //newProfile[prop][0] = _profile[prop][0];
         }
-
+  
+        profLen = _profile.length;
+        posLen = _positions.length;
+  
+        let k = 0;
+        for (let i = 0; i < posLen; i++) {
+          while (_positions[i] > _profile[k + 1].x) {
+            if (k === profLen - 2) break;
+            k++;
+          }
+          let f = (_positions[i] - _profile[k].x) / (_profile[k + 1].x - _profile[k].x);
+          for (let prop of props) {
+            newProfile[prop][i] = _profile[k][prop] * (1 - f) + _profile[k + 1][prop] * f;
+          }
+  
+        }
+        return newProfile;
       }
-      return newProfile;
+  
     }
-
-  }
+    */
 
   /* solver
    * メルトとの平衡組成を計算する関数
