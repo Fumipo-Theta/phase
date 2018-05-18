@@ -1,6 +1,6 @@
 (function (root, factory) {
   if (typeof define === 'function' && define.amd) {
-    define(["geochem", "../../jslib/matrix"], factory);
+    define(["geochem", "matrix/matrix"], factory);
   } else if (typeof exports === 'object') {
     module.exports = factory();
   } else {
@@ -13,7 +13,7 @@
 
   const Matrix = (typeof require === 'undefined' && typeof _Matrix === 'object')
     ? _Matrix
-    : require('../../jslib/matrix.js');
+    : require('matrix');
 
 
   class Equilibrate {
