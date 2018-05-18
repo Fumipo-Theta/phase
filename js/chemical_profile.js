@@ -20,7 +20,7 @@
     reset(propList) {
       const profile = {}
 
-      propList.map(propNames => {
+      propList.map(propName => {
         if (Array.isArray(propName)) {
           propName.map(p => {
             profile[p] = [];
