@@ -57,6 +57,7 @@
       this.molarValue = GeoChem.getMolarValue();
       this.majorList = GeoChem.getMajorList();
       this.traceList = GeoChem.getTraceList();
+      this.optionalProperty = ["F", "T", "N", "P", "x"];
       this.name = name;
     };
 
@@ -79,12 +80,18 @@
       this.atom = this.initMajor();
       this.profile = {
         "ascend": new ChemicalProfile(
-          this.majorList,
-          this.traceList
+          [
+            this.majorList,
+            this.traceList,
+            this.optionalProperty
+          ]
         ),
         "descend": new ChemicalProfile(
-          this.majorList,
-          this.traceList
+          [
+            this.majorList,
+            this.traceList,
+            this.optionalProperty
+          ]
         )
       }
       this.isInitialized = true;
@@ -318,14 +325,23 @@
 
     pushProfile(F, T, P, path) {
       this.profile[path].push(
-        this.major,
-        this.trace,
-        F,
-        T,
-        P,
-        this.getAtomSum()
+        [
+          this.major,
+          this.trace,
+          {
+            F: F,
+            T: T,
+            P: P,
+            N: this.getAtomSum(),
+            x: 0
+          }
+        ]
       )
       return this;
+    }
+
+    popProfile(path) {
+      return this.profile[path].pop();
     }
 
     getProfile(path) {
@@ -333,7 +349,7 @@
     }
 
     resetProfile(path) {
-      this.profile[path].reset(this.majorList, this.traceList);
+      this.profile[path].reset([this.majorList, this.traceList, this.optionalProperty]);
       this.major0 = {};
       return this;
     }

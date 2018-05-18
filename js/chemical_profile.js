@@ -13,44 +13,80 @@
 
 
   class ChemicalProfile {
-    constructor(majorList, traceList) {
-      this.optional = ["F", "T", "N", "P", "x"];
-      this.profile = this.reset(majorList, traceList);
-
+    constructor(propList) {
+      this.profile = this.reset(propList);
     }
 
-    reset(majorList, traceList) {
+    reset(propList) {
       const profile = {}
 
-      majorList.map(e => {
-        profile[e] = [];
-      })
-      traceList.map(e => {
-        profile[e] = [];
-      })
-      this.optional.map(e => {
-        profile[e] = [];
+      propList.map(propNames => {
+        if (Array.isArray(propName)) {
+          propName.map(p => {
+            profile[p] = [];
+          })
+        } else {
+          profile[propName] = [];
+        }
+
       })
 
       return profile
     }
 
-    push(major, trace, F, T, P, N) {
-      for (let e in major) {
-        this.profile[e].push(major[e]);
-      }
-      for (let e in trace) {
-        this.profile[e].push(trace[e]);
-      }
-      this.profile.F.push(F);
-      this.profile.T.push(T);
-      this.profile.P.push(P);
-      this.profile.N.push(N);
-      this.profile.x.push(0);
+    push(objs) {
+      const objectArray = (Array.isArray(objs))
+        ? objs
+        : [objs]
+
+      objectArray.map(obj => {
+        Object.entries(obj).map(kv => {
+          let k = kv[0], v = kv[1];
+          this.profile[k].push(v)
+        })
+      })
+
     }
 
-    get() {
-      return JSON.parse(JSON.stringify(this.profile));
+    pop() {
+      const obj = {}
+      Object.entries(this.profile).map(kv => {
+        let k = kv[0], v = kv[1];
+        obj[k] = v.pop();
+      })
+      return obj;
+    }
+
+    get(keys = []) {
+      const obj = {}
+
+      if (keys.length === 0) {
+        obj = JSON.parse(JSON.stringify(this.profile))
+      } else {
+        keys.map(k => {
+          obj[k] = JSON.parse(JSON.stringify(this.profile[k]))
+        })
+      }
+      return obj
+    }
+
+    set(opt) {
+      Object.entries(opt).map(kv => {
+        let k = kv[0], array = kv[1];
+        this.profile[k] = array;
+      })
+    }
+
+    pick(k, i) {
+      return this.profile[k][i];
+    }
+
+    direct(k, i, v) {
+      this.profile[k][i] = v;
+    }
+
+    getLength(k) {
+      return this.profile[k].length;
     }
 
     transformByEqualStep(_divNum = 1, _prop) {
@@ -85,37 +121,37 @@
         F += dF;
       }
 
-      return newProfile;
+      this.profile = newProfile;
     }
 
-    transformByRadius(_positions) {
+    transformByRadius(_positions, x = "x") {
       const profile = this.profile;
       if (_profile.length < 1) throw new Error("Length of profile is 0");
       if (_positions.length < 1) throw new Error("Length of positions is 0");
 
       const newProfile = {}
-      const props = Object.keys(_profile[0]);
+      const props = Object.keys(_profile);
       for (let prop of props) {
         newProfile[prop] = [];
         //newProfile[prop][0] = _profile[prop][0];
       }
 
-      profLen = _profile.length;
+      profLen = _profile[props[0]].length;
       posLen = _positions.length;
 
       let k = 0;
       for (let i = 0; i < posLen; i++) {
-        while (_positions[i] > _profile[k + 1].x) {
+        while (_positions[i] > _profile[x][k + 1]) {
           if (k === profLen - 2) break;
           k++;
         }
-        let f = (_positions[i] - _profile[k].x) / (_profile[k + 1].x - _profile[k].x);
+        let f = (_positions[i] - _profile[x][k]) / (_profile[x][k + 1] - _profile[x][k]);
         for (let prop of props) {
-          newProfile[prop][i] = _profile[k][prop] * (1 - f) + _profile[k + 1][prop] * f;
+          newProfile[prop][i] = _profile[prop][k] * (1 - f) + _profile[prop][k + 1] * f;
         }
 
       }
-      return newProfile;
+      this.profile = newProfile;
     }
 
     /** section Resampler */
