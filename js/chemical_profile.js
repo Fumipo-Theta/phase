@@ -11,6 +11,13 @@
     ? _GeoChem
     : require("./geochem");
 
+  /** ChemicalProfile
+   *  profile:{
+   *  x:[],
+   *  SiO2:[],
+   *  ...
+   * }
+   */
 
   class ChemicalProfile {
     constructor(propList) {
