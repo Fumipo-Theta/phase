@@ -47,7 +47,7 @@
           (opx.D.hasOwnProperty("NiO")) ? melt.major.NiO * opx.D.NiO(T, P) : 0
         ];
 
-        let x = Solver[method](A, v);
+        let x = Equilibrate[method](A, v);
 
         const trace = {};
         for (let e in melt.trace) {
@@ -100,7 +100,7 @@
           (olivine.D.hasOwnProperty("NiO")) ? melt.major.NiO * olivine.D.NiO(T, P) : 0
         ];
 
-        let x = Solver[method](A, v, 1e-6, 0.9);
+        let x = Equilibrate[method](A, v, 1e-6, 0.9);
 
         const trace = {};
         for (let e in melt.trace) {
