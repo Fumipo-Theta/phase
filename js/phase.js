@@ -261,7 +261,7 @@
         let k = kv[0], v = kv[1], m = molar[k];
         this.major[k] = (exceptH2O === true && k === "H2O")
           ? this.major[k]
-          : v * m / w;
+          : v * m / w * 100;
       })
       /*
       let weight = 0;
@@ -348,8 +348,14 @@
       return this.profile[path].get();
     }
 
-    resetProfile(path) {
-      this.profile[path].reset([this.majorList, this.traceList, this.optionalProperty]);
+    resetProfile(_path = ["ascend", "descend"]) {
+      const path = (Array.isArray(_path))
+        ? _path
+        : [_path]
+
+      path.map(p => {
+        this.profile[p].reset([this.majorList, this.traceList, this.optionalProperty]);
+      })
       this.major0 = {};
       return this;
     }
