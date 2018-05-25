@@ -116,36 +116,62 @@
 
     getMixture() { }
 
-    setComposition(_compo) {
+    resetAtom() {
+      this.atom = this.initMajor();
+      return this;
+    }
 
-      Object.entries(_compo).map(kv => {
-        let k = kv[0];
-        let v = kv[1]
-        if (this.major.hasOwnProperty(k)) {
-          this.major[k] = v * 1.;
-          this.major0[k] = v * 1.;
-        } else if (this.trace.hasOwnProperty(k)) {
-          this.trace[k] = v * 1.;
-        }
+    setProperty(attrs, prop) {
+      attrs.map(attr => {
+        Object.entries(prop).map(kv => {
+          let [k, v] = kv;
+          if (attr.hasOwnProperty(k)) {
+            attr[k] = v * 1.;
+          }
+        })
       })
+      return this;
+    }
+
+    setComposition(_compo) {
+      this.major = this.initMajor();
+      this.major0 = this.initMajor();
+      this.trace = this.initTrace();
+      this.resetAtom();
+
+      this.setProperty([
+        this.major,
+        this.major0,
+        this.trace
+      ], _compo);
       return this;
     }
 
     updateComposition(_compo) {
-      this.setComposition(_compo);
+      this.setProperty([
+        this.major,
+        this.major0,
+        this.trace
+      ], _compo);
       return this;
     }
 
     setMolar(_molar) {
-      Object.entries(_molar).map(kv => {
-        let k = kv[0];
-        let v = kv[1];
-        if (this.atom.hasOwnProperty(k)) {
-          this.atom[k] = v * 1.;
-        } else {
-          this.atom[k] = 0;
-        }
-      })
+      this.major = this.initMajor();
+      this.major0 = this.initMajor();
+      this.trace = this.initTrace();
+      this.resetAtom();
+
+      this.setProperty([
+        this.atom
+      ], _compo)
+      return this;
+    }
+
+    updateMoler(_compo) {
+      this.setProperty([
+        this.atom
+      ], _compo);
       return this;
     }
 

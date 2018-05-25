@@ -38,8 +38,8 @@
       return this;
     }
 
-    compensateFe() {
-      this.compo2atom().atom2compo();
+    compensateFe(exceptH2O = true) {
+      this.compo2atom(exceptH2O, true).atom2compo();
       return this;
     }
 
