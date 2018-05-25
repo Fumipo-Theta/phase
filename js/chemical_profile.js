@@ -21,10 +21,14 @@
 
   class ChemicalProfile {
     constructor(propList) {
-      this.profile = this.reset(propList);
+      this.profile = ChemicalProfile.initialize(propList);
     }
 
     reset(propList) {
+      this.profile = ChemicalProfile.initialize(propList)
+    }
+
+    static initialize(propList) {
       const profile = {}
 
       propList.map(propName => {
@@ -65,7 +69,7 @@
     }
 
     get(keys = []) {
-      const obj = {}
+      let obj = {}
 
       if (keys.length === 0) {
         obj = JSON.parse(JSON.stringify(this.profile))
