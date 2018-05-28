@@ -19,6 +19,7 @@
 		}
 	}
  */
+
 (function (root, factory) {
   if (typeof define === 'function' && define.amd) {
     // AMD. Register as an anonymous module.
@@ -30,15 +31,14 @@
     module.exports = factory();
   } else {
     // Browser globals (root is window)
-    root.phase = factory(root.GeoChem, root.ChemicalProfile);
+    root.Phase = factory(root.GeoChem, root.ChemicalProfile);
   }
 }(this, function (_GeoChem, _ChemicalProfile) {
-
-  const GeoChem = (typeof require === 'undefined' && typeof _GeoChem === 'object')
+  const GeoChem = (typeof require === 'undefined' && (typeof _GeoChem === 'object' || typeof _GeoChem === "function"))
     ? _GeoChem
     : require("./geochem");
 
-  const ChemicalProfile = (typeof require === 'undefined' && typeof _ChemicalProfile === 'object')
+  const ChemicalProfile = (typeof require === 'undefined' && (typeof _ChemicalProfile === 'object' || typeof _ChemicalProfile === "function"))
     ? _ChemicalProfile
     : require("./chemical_profile");
 
@@ -215,7 +215,7 @@
     /*
     getAtomSum(hydrous = false) {
       let molar = Phase.getMolarValue();
-
+ 
       let atomSum = 0;
       for (let elem in molar) {
         if (hydrous === false && elem === "H2O") continue;
@@ -293,7 +293,7 @@
       let weight = 0;
       for (let elem in molar) {
         if (hydrous === false && elem === "H2O") {
-
+ 
           continue;
         }
         if (!atom[elem]) major[elem] = 0;
@@ -301,7 +301,7 @@
         major[elem] = atom[elem] * molar[elem];
         weight += major[elem];
       };
-
+ 
       for (let elem in molar) {
         if (hydrous === false && elem === "H2O") {
           major.H2O = this.major.H2O;
@@ -309,7 +309,7 @@
         }
         major[elem] = major[elem] / weight * 100;
       };
-
+ 
       this.major = major;
       */
       return this;

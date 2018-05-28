@@ -4,12 +4,9 @@
   } else if (typeof exports === 'object') {
     module.exports = factory();
   } else {
-    root.ChemicalProfile = factory(root.GeoChem);
+    root.ChemicalProfile = factory();
   }
-}(this, function (_GeoChem) {
-  const GeoChem = (typeof require === 'undefined' && typeof _GeoChem === 'object')
-    ? _GeoChem
-    : require("./geochem");
+}(this, function () {
 
   /** ChemicalProfile
    *  profile:{

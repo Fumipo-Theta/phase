@@ -6,13 +6,13 @@
   } else {
     root.Liquid = factory(root.GeoChem, root.Phase);
   }
-}(this, function (_GeoChem, _phase) {
-  const GeoChem = (typeof require === 'undefined' && typeof _GeoChem === 'object')
+}(this, function (_GeoChem, _Phase) {
+  const GeoChem = (typeof require === 'undefined' && (typeof _GeoChem === 'object' || typeof _GeoChem === 'function'))
     ? _GeoChem
     : require("./geochem");
 
-  const Phase = (typeof require === 'undefined' && typeof _phase === 'object')
-    ? _phase
+  const Phase = (typeof require === 'undefined' && (typeof _Phase === 'object' || typeof _Phase === 'function'))
+    ? _Phase
     : require("./phase");
 
   const sum = (a, b) => a + b;
