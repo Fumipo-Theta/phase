@@ -65,8 +65,9 @@
       return obj;
     }
 
-    get(keys = []) {
+    get(_keys = []) {
       let obj = {}
+      const keys = (Array.isArray(_keys)) ? _keys : [_keys];
 
       if (keys.length === 0) {
         obj = JSON.parse(JSON.stringify(this.profile))
@@ -79,8 +80,7 @@
     }
 
     set(opt) {
-      Object.entries(opt).map(kv => {
-        let k = kv[0], array = kv[1];
+      Object.entries(opt).map(([k, array]) => {
         this.profile[k] = array;
       })
     }
