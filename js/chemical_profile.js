@@ -56,6 +56,17 @@
 
     }
 
+    concat(objs) {
+      const objectArray = (Array.isArray(objs))
+        ? objs
+        : [objs]
+      objectArray.map(obj => {
+        Object.entries(obj).map(([k, v]) => {
+          this.profile[k] = [...this.profile[k], ...v]
+        })
+      })
+    }
+
     pop() {
       const obj = {}
       Object.entries(this.profile).map(kv => {
