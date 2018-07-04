@@ -7,14 +7,13 @@
     root.Equilibrate = factory(root.GeoChem, root.Matrix);
   }
 }(this, function (_GeoChem, _Matrix) {
-  const GeoChem = (typeof require === 'undefined' && typeof _GeoChem === 'object')
+  const GeoChem = (typeof require === 'undefined' && (typeof _GeoChem === 'object' || typeof _GeoChem === 'function'))
     ? _GeoChem
     : require("./geochem");
 
-  const Matrix = (typeof require === 'undefined' && typeof _Matrix === 'object')
+  const Matrix = (typeof require === 'undefined' && (typeof _Matrix === 'object' || typeof _Matrix === 'function'))
     ? _Matrix
     : require('matrix');
-
 
   class Equilibrate {
     constructor() { }
