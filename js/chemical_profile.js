@@ -132,7 +132,9 @@
           k++;
         }
 
-        let f = (F - _profile[_prop][k]) / (_profile[_prop][k + 1] - _profile[_prop][k]);
+        let f = ((_profile[_prop][k + 1] - _profile[_prop][k]) === 0)
+          ? 0
+          : (F - _profile[_prop][k]) / (_profile[_prop][k + 1] - _profile[_prop][k]);
 
         for (let prop of props) {
           newProfile[prop][i] = _profile[prop][k] * (1 - f) + _profile[prop][k + 1] * f;
@@ -143,33 +145,36 @@
       this.profile = newProfile;
     }
 
-    transformByRadius(_positions, x = "x") {
+    transformByRadius(positions, x = "x") {
+
+      if (positions.length < 1) throw new Error("Length of positions is 0");
       const profile = this.profile;
-      if (_profile.length < 1) throw new Error("Length of profile is 0");
-      if (_positions.length < 1) throw new Error("Length of positions is 0");
+      const props = Object.keys(profile).filter(v => v !== x);
+      const profLen = profile[props[0]].length;
+      const posLen = positions.length;
+
+
 
       const newProfile = {}
-      const props = Object.keys(_profile);
       for (let prop of props) {
         newProfile[prop] = [];
-        //newProfile[prop][0] = _profile[prop][0];
       }
-
-      profLen = _profile[props[0]].length;
-      posLen = _positions.length;
 
       let k = 0;
       for (let i = 0; i < posLen; i++) {
-        while (_positions[i] > _profile[x][k + 1]) {
+        while (positions[i] > profile[x][k + 1]) {
           if (k === profLen - 2) break;
           k++;
         }
-        let f = (_positions[i] - _profile[x][k]) / (_profile[x][k + 1] - _profile[x][k]);
+        let f = ((profile[x][k + 1] - profile[x][k]) === 0)
+          ? 0
+          : (positions[i] - profile[x][k]) / (profile[x][k + 1] - profile[x][k]);
         for (let prop of props) {
-          newProfile[prop][i] = _profile[prop][k] * (1 - f) + _profile[prop][k + 1] * f;
+          newProfile[prop][i] = profile[prop][k] * (1 - f) + profile[prop][k + 1] * f;
         }
-
       }
+      newProfile[x] = [...positions];
+
       this.profile = newProfile;
     }
 
