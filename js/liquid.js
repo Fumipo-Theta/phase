@@ -22,6 +22,7 @@
     constructor(name) {
       super(name);
       this.fFe2 = 1;
+      this.outOfRange = false;
     }
 
     static isLiquid(obj) {
@@ -80,17 +81,34 @@
      */
     differentiate(objs, massFraction) {
       let self = this;
+      if (self.outOfRange) throw new Error("Composition out of range");
       for (let prop in this.major) {
         let component = objs.map((o) => o.phase.major[prop] * o.f)
           .reduce(sum);
-        self.major[prop] = (this.major[prop] + massFraction * component) / (1 + massFraction);
+        let candidate = (this.major[prop] + massFraction * component) / (1 + massFraction);
+        if (0 <= candidate && candidate <= 100) {
+          self.major[prop] = candidate;
+        } else {
+          self.outOfRange === true;
+        }
+
       };
 
       for (let prop in this.trace) {
         let component = objs.map((o) => o.phase.trace[prop] * o.f)
           .reduce(sum);
-        self.trace[prop] = (this.trace[prop] + massFraction * component) / (1 + massFraction);
+        let candidate = (this.trace[prop] + massFraction * component) / (1 + massFraction);
+        if (0 <= candidate && candidate <= 100000000) {
+          self.trace[prop] = candidate;
+        } else {
+          self.outOfRange === true;
+        }
       };
+      return this;
+    }
+
+    startDifferentiate() {
+      this.outOfRange = false;
       return this;
     }
 
