@@ -100,7 +100,7 @@
 
     static initComposition(elementList) {
       const obj = {};
-      elementList.map(e => {
+      elementList.forEach(e => {
         obj[e] = 0;
       })
       return obj;
@@ -122,9 +122,8 @@
     }
 
     setProperty(attrs, prop) {
-      attrs.map(attr => {
-        Object.entries(prop).map(kv => {
-          let [k, v] = kv;
+      attrs.forEach(attr => {
+        Object.entries(prop).forEach(([k, v]) => {
           if (attr.hasOwnProperty(k)) {
             attr[k] = v * 1.;
           }
@@ -202,9 +201,7 @@
     getAtomSum(exceptH2O = true) {
       const molar = GeoChem.getMolarValue();
 
-      return Object.entries(molar).map(kv => {
-        let k = kv[0];
-        let v = kv[1];
+      return Object.entries(molar).map(([k, v]) => {
         return (exceptH2O === true && k === "H2O")
           ? 0
           : (!this.atom.hasOwnProperty(k))
@@ -236,7 +233,7 @@
           : this.major[e];
       }).reduce(sum);
 
-      elements.map(e => {
+      elements.forEach(e => {
         this.major[e] = (e === "H2O")
           ? (exceptH2O)
             ? this.major[e]
@@ -251,8 +248,8 @@
       const molar = GeoChem.getMolarValue();
       const major = this.major;
 
-      Object.entries(major).map(kv => {
-        let k = kv[0], v = kv[1], m = molar[k];
+      Object.entries(major).forEach(([k, v]) => {
+        let m = molar[k];
         this.atom[k] = (exceptH2O === true && k === "H2O")
           ? 0
           : v / m
@@ -261,7 +258,7 @@
       if (normalize) {
         const atomSum = this.getAtomSum(exceptH2O);
 
-        Object.keys(major).map(k => {
+        Object.keys(major).forEach(k => {
           let v = this.atom[k]
           this.atom[k] = (exceptH2O === true && k === "H2O")
             ? 0
@@ -283,35 +280,14 @@
           : v * m;
       }).reduce(sum);
 
-      Object.entries(atom).map(kv => {
+      Object.entries(atom).forEach(kv => {
         let k = kv[0], v = kv[1], m = molar[k];
         this.major[k] = (exceptH2O === true && k === "H2O")
           ? this.major[k]
           : v * m / w * 100;
       })
-      /*
-      let weight = 0;
-      for (let elem in molar) {
-        if (hydrous === false && elem === "H2O") {
- 
-          continue;
-        }
-        if (!atom[elem]) major[elem] = 0;
-        if (atom[elem] < 0) return false;
-        major[elem] = atom[elem] * molar[elem];
-        weight += major[elem];
-      };
- 
-      for (let elem in molar) {
-        if (hydrous === false && elem === "H2O") {
-          major.H2O = this.major.H2O;
-          continue;
-        }
-        major[elem] = major[elem] / weight * 100;
-      };
- 
-      this.major = major;
-      */
+
+
       return this;
     }
 
@@ -393,14 +369,14 @@
 
       end = new RegExp(separator + "$");
 
-      keys.map((v) => {
+      keys.forEach((v) => {
         str += '"' + v.toString().replace('"', '') + '"' + separator;
       })
       str = str.replace(end, '');
       str += "\n";
 
       for (let i = 0, l = profile[keys[0]].length; i < l; i++) {
-        keys.map((k) => {
+        keys.forEach((k) => {
           str += '"' + profile[k][i].toString().replace('"', '') + '"' + separator;
         })
         str = str.replace(end, '\n');

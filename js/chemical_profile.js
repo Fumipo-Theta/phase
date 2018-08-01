@@ -28,9 +28,9 @@
     static initialize(propList) {
       const profile = {}
 
-      propList.map(propName => {
+      propList.forEach(propName => {
         if (Array.isArray(propName)) {
-          propName.map(p => {
+          propName.forEach(p => {
             profile[p] = [];
           })
         } else {
@@ -47,8 +47,8 @@
         ? objs
         : [objs]
 
-      objectArray.map(obj => {
-        Object.entries(obj).map(kv => {
+      objectArray.forEach(obj => {
+        Object.entries(obj).forEach(kv => {
           let k = kv[0], v = kv[1];
           this.profile[k].push(v)
         })
@@ -60,8 +60,8 @@
       const objectArray = (Array.isArray(objs))
         ? objs
         : [objs]
-      objectArray.map(obj => {
-        Object.entries(obj).map(([k, v]) => {
+      objectArray.forEach(obj => {
+        Object.entries(obj).forEach(([k, v]) => {
           this.profile[k] = [...this.profile[k], ...v]
         })
       })
@@ -69,7 +69,7 @@
 
     pop() {
       const obj = {}
-      Object.entries(this.profile).map(kv => {
+      Object.entries(this.profile).forEach(kv => {
         let k = kv[0], v = kv[1];
         obj[k] = v.pop();
       })
@@ -83,7 +83,7 @@
       if (keys.length === 0) {
         obj = JSON.parse(JSON.stringify(this.profile))
       } else {
-        keys.map(k => {
+        keys.forEach(k => {
           obj[k] = JSON.parse(JSON.stringify(this.profile[k]))
         })
       }
@@ -91,7 +91,7 @@
     }
 
     set(opt) {
-      Object.entries(opt).map(([k, array]) => {
+      Object.entries(opt).forEach(([k, array]) => {
         this.profile[k] = array;
       })
     }
@@ -119,7 +119,7 @@
       const newProfile = {};
       const props = Object.keys(_profile);
 
-      props.map(k => {
+      props.forEach(k => {
         newProfile[k] = [_profile[k][0]];
       })
 

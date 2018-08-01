@@ -48,7 +48,7 @@
       const molar = GeoChem.getMolarValue();
       const major = this.major;
 
-      Object.entries(major).map(kv => {
+      Object.entries(major).forEach(kv => {
         let k = kv[0], v = kv[1], m = molar[k];
         this.atom[k] = (exceptH2O === true && k === "H2O")
           ? 0
@@ -63,7 +63,7 @@
       if (normalize) {
         const atomSum = this.getAtomSum(exceptH2O);
 
-        Object.keys(major).map(k => {
+        Object.keys(major).forEach(k => {
           let v = this.atom[k]
           this.atom[k] = (exceptH2O === true && k === "H2O")
             ? 0
