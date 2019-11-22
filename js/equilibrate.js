@@ -13,7 +13,7 @@
 
   const Matrix = (typeof require === 'undefined' && (typeof _Matrix === 'object' || typeof _Matrix === 'function'))
     ? _Matrix
-    : require('matrix');
+    : require('./matrix');
 
   class Equilibrate {
     constructor() { }
