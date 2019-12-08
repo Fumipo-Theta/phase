@@ -109,4 +109,4 @@ class Magma {
 
 }
 
-module.export = Magma;
+module.exports = Magma;

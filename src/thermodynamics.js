@@ -28,10 +28,10 @@ model = {};
 
 model.Gibbs = new function () {
     this.system = {
-        dH=0,
-        dCp=0,
-        dS=0,
-        dV=0
+        dH: 0,
+        dCp: 0,
+        dS: 0,
+        dV: 0
     };
     this.bulkCompo = {};
     return this;
