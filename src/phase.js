@@ -214,7 +214,7 @@ class Phase {
                     ? 0
                     : this.major[e]
                 : this.major[e];
-        }).reduce(sum);
+        }).reduce(sum, 0);
 
         elements.forEach(e => {
             this.major[e] = (e === "H2O")
@@ -281,7 +281,7 @@ class Phase {
                 return (exceptH2O === true && k === "H2O")
                     ? 0
                     : this.atom[k] / v;
-            }).reduce(sum);
+            }).reduce(sum, 0);
     }
 
     getComposition() {

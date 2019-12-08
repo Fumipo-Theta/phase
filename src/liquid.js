@@ -72,7 +72,7 @@ class Liquid extends Phase {
         if (self.outOfRange) throw new Error("Composition out of range");
         for (let prop in this.major) {
             let component = objs.map((o) => o.phase.major[prop] * o.f)
-                .reduce(sum);
+                .reduce(sum, 0);
             let candidate = (this.major[prop] + massFraction * component) / (1 + massFraction);
             if (0 <= candidate && candidate <= 100) {
                 self.major[prop] = candidate;
@@ -84,7 +84,7 @@ class Liquid extends Phase {
 
         for (let prop in this.trace) {
             let component = objs.map((o) => o.phase.trace[prop] * o.f)
-                .reduce(sum);
+                .reduce(sum, 0);
             let candidate = (this.trace[prop] + massFraction * component) / (1 + massFraction);
             if (0 <= candidate && candidate <= 100000000) {
                 self.trace[prop] = candidate;
